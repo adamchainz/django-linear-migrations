@@ -66,27 +66,27 @@ class MigrationDetails:
         }
 
 
-dmc_E001_msg = "{app_config.label}'s max_migration.txt does not exist."
+dmc_E001_msg = "{app_label}'s max_migration.txt does not exist."
 dmc_E001_hint = (
     "If you just installed django-migration-conflicts, run 'python manage.py"
     + " makemigrations --initialize-max-migrations'. Otherwise, check how it"
     + " has gone missing."
 )
 
-dmc_E002_msg = "{app_config.label}'s max_migration.txt contains multiple lines."
+dmc_E002_msg = "{app_label}'s max_migration.txt contains multiple lines."
 dmc_E002_hint = (
     "This may be the result of a git merge. Fix the file to contain only the"
     + " name of the latest migration."
 )
 
 dmc_E003_msg = (
-    "{app_config.label}'s max_migration.txt points to non-existent migration"
+    "{app_label}'s max_migration.txt points to non-existent migration"
     + " '{max_migration_name}'."
 )
 dmc_E003_hint = "Edit the max_migration.txt to contain the latest migration's name."
 
 dmc_E004_msg = (
-    "{app_config.label}'s max_migration.txt contains '{max_migration_name}',"
+    "{app_label}'s max_migration.txt contains '{max_migration_name}',"
     + " but the latest migration is '{real_max_migration_name}'."
 )
 dmc_E004_hint = (
@@ -112,7 +112,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dmc.E001",
-                    msg=dmc_E001_msg.format(app_config=app_config),
+                    msg=dmc_E001_msg.format(app_label=app_label),
                     hint=dmc_E001_hint,
                 )
             )
@@ -123,7 +123,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dmc.E002",
-                    msg=dmc_E002_msg.format(app_config=app_config),
+                    msg=dmc_E002_msg.format(app_label=app_label),
                     hint=dmc_E002_hint,
                 )
             )
@@ -135,7 +135,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
                 Error(
                     id="dmc.E003",
                     msg=dmc_E003_msg.format(
-                        app_config=app_config, max_migration_name=max_migration_name
+                        app_label=app_label, max_migration_name=max_migration_name
                     ),
                     hint=dmc_E003_hint,
                 )
@@ -148,12 +148,12 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
                 Error(
                     id="dmc.E004",
                     msg=dmc_E004_msg.format(
-                        app_config=app_config,
+                        app_label=app_label,
                         max_migration_name=max_migration_name,
                         real_max_migration_name=real_max_migration_name,
                     ),
                     hint=dmc_E004_hint.format(
-                        app_config=app_config,
+                        app_label=app_label,
                         max_migration_name=max_migration_name,
                         real_max_migration_name=real_max_migration_name,
                     ),
