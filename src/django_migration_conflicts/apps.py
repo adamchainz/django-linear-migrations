@@ -1,5 +1,5 @@
 import pkgutil
-from importlib import import_module
+from importlib import import_module, reload
 from pathlib import Path
 
 from django.apps import AppConfig, apps
@@ -29,29 +29,29 @@ def first_party_app_configs():
 
 
 class MigrationDetails:
-    def __init__(self, app_label):
+    def __init__(self, app_label, do_reload=False):
         self.app_label = app_label
 
         # Some logic duplicated from MigrationLoader.load_disk, but avoiding
         # loading all migrations since that's relatively slow.
         migrations_module_name, _explicit = MigrationLoader.migrations_module(app_label)
         try:
-            migrations_module = import_module(migrations_module_name)
+            self.migrations_module = import_module(migrations_module_name)
         except ModuleNotFoundError:
             # Unmigrated app
-            migrations_module = None
+            self.migrations_module = None
         else:
-            # Django ignores namespace migrations modules
-            if is_namespace_module(migrations_module):
-                migrations_module = None
-            # Django ignores non-package migrations modules
-            if not hasattr(migrations_module, "__path__"):
-                migrations_module = None
-        self.migrations_module = migrations_module
+            if do_reload:
+                reload(self.migrations_module)
 
     @property
     def has_migrations(self):
-        return self.migrations_module is not None
+        return (
+            self.migrations_module is not None
+            and not is_namespace_module(self.migrations_module)
+            # Django ignores non-package migrations modules
+            and hasattr(self.migrations_module, "__path__")
+        )
 
     @cached_property
     def dir(self):
