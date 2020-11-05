@@ -5,6 +5,7 @@ from pathlib import Path
 from django.apps import AppConfig, apps
 from django.core.checks import Tags, Error, register
 from django.db.migrations.loader import MigrationLoader
+from django.utils.functional import cached_property
 
 from django_migration_conflicts.compat import is_namespace_module
 
@@ -25,6 +26,44 @@ def first_party_app_configs():
             continue
 
         yield app_config
+
+
+class MigrationDetails:
+    def __init__(self, app_label):
+        self.app_label = app_label
+
+        # Some logic duplicated from MigrationLoader.load_disk, but avoiding
+        # loading all migrations since that's relatively slow.
+        migrations_module_name, _explicit = MigrationLoader.migrations_module(app_label)
+        try:
+            migrations_module = import_module(migrations_module_name)
+        except ModuleNotFoundError:
+            # Unmigrated app
+            migrations_module = None
+        else:
+            # Django ignores namespace migrations modules
+            if is_namespace_module(migrations_module):
+                migrations_module = None
+            # Django ignores non-package migrations modules
+            if not hasattr(migrations_module, "__path__"):
+                migrations_module = None
+        self.migrations_module = migrations_module
+
+    @property
+    def has_migrations(self):
+        return self.migrations_module is not None
+
+    @cached_property
+    def dir(self):
+        return Path(self.migrations_module.__file__).parent
+
+    @cached_property
+    def names(self):
+        return {
+            name
+            for _, name, is_pkg in pkgutil.iter_modules(self.migrations_module.__path__)
+            if not is_pkg and name[0] not in "_~"
+        }
 
 
 dmc_E001_msg = "{app_config.label}'s max_migration.txt does not exist."
@@ -62,29 +101,13 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
         # When only checking certain apps, skip the others
         if app_configs is not None and app_config not in app_configs:
             continue
+        app_label = app_config.label
+        migration_details = MigrationDetails(app_label)
 
-        # Some logic duplicated from MigrationLoader.load_disk, but avoiding
-        # loading all migrations during system checks since that's relatively
-        # slow.
-        migrations_module_name, _explicit = MigrationLoader.migrations_module(
-            app_config.label
-        )
-        try:
-            migrations_module = import_module(migrations_module_name)
-        except ModuleNotFoundError:
-            # Unmigrated app
+        if not migration_details.has_migrations:
             continue
-        else:
-            # Django ignores namespace migrations modules
-            if is_namespace_module(migrations_module):
-                continue
-            # Django ignores non-package migrations modules
-            if not hasattr(migrations_module, "__path__"):
-                continue
 
-        migrations_dir = Path(migrations_module.__file__).parent
-
-        max_migration_txt = migrations_dir / "max_migration.txt"
+        max_migration_txt = migration_details.dir / "max_migration.txt"
         if not max_migration_txt.exists():
             errors.append(
                 Error(
@@ -107,13 +130,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             continue
 
         max_migration_name = max_migration_txt_lines[0]
-        migration_names = {
-            name
-            for _, name, is_pkg in pkgutil.iter_modules(migrations_module.__path__)
-            if not is_pkg and name[0] not in "_~"
-        }
-
-        if max_migration_name not in migration_names:
+        if max_migration_name not in migration_details.names:
             errors.append(
                 Error(
                     id="dmc.E003",
@@ -125,7 +142,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             )
             continue
 
-        real_max_migration_name = max(migration_names)
+        real_max_migration_name = max(migration_details.names)
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(
