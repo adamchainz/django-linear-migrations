@@ -3,11 +3,11 @@ from importlib import import_module, reload
 from pathlib import Path
 
 from django.apps import AppConfig, apps
-from django.core.checks import Tags, Error, register
+from django.core.checks import Error, Tags, register
 from django.db.migrations.loader import MigrationLoader
 from django.utils.functional import cached_property
 
-from django_migration_conflicts.compat import is_namespace_module
+from django_migration_conflicts.compat import ModuleNotFoundError, is_namespace_module
 
 
 class DjangoMigrationConflictsAppConfig(AppConfig):

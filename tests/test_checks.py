@@ -10,7 +10,7 @@ from django_migration_conflicts.apps import check_max_migration_files
 class CheckMaxMigrationFilesTests(SimpleTestCase):
     @pytest.fixture(autouse=True)
     def tmp_path_fixture(self, tmp_path):
-        migrations_module_name = "migrations" + str(time.time_ns())
+        migrations_module_name = "migrations" + str(time.time()).replace(".", "")
         self.migrations_dir = tmp_path / migrations_module_name
         self.migrations_dir.mkdir()
         sys.path.insert(0, str(tmp_path))
@@ -77,9 +77,9 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
         assert len(result) == 1
         assert result[0].id == "dmc.E003"
-        assert (
-            result[0].msg
-            == "testapp's max_migration.txt points to non-existent migration '0001_start'."
+        assert result[0].msg == (
+            "testapp's max_migration.txt points to non-existent migration"
+            + " '0001_start'."
         )
 
     def test_dmc_E004(self):
