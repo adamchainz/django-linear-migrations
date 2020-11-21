@@ -1,5 +1,10 @@
 import sys
 
+if sys.version_info >= (3, 6):
+    ModuleNotFoundError = __builtins__.ModuleNotFoundError
+else:
+    ModuleNotFoundError = ImportError
+
 if sys.version_info >= (3, 7):
 
     def is_namespace_module(module):
