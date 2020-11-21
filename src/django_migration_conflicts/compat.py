@@ -1,7 +1,8 @@
+import builtins
 import sys
 
 if sys.version_info >= (3, 6):
-    ModuleNotFoundError = __builtins__.ModuleNotFoundError
+    ModuleNotFoundError = builtins.ModuleNotFoundError
 else:
     ModuleNotFoundError = ImportError
 
