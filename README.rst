@@ -78,12 +78,12 @@ Usage
 
 django-migration-conflicts helps you work on Django projects where several branches adding migrations may be in progress at any time.
 It enforces the use of a *linear* migration history, avoiding merge migrations and any possible problems from migrations running in different orders.
-It does this by turning parallel migration development into conflicts on per-app ``max_migration.txt`` files that your source control tool (Git, Mercurial, etc.) will detect.
-
-Its extended ``makemigrations`` command updates the ``max_migration.txt`` file with the name of the new migration when run.
+It does this by making ``makemigrations`` record the name of the latest migration in per-app ``max_migration.txt`` files.
+These files will then cause a merge conflicts in your source control tool (Git, Mercurial, etc.) in the case of migrations for the same app being developed in parallel.
+The first merged migration on an app will prevent the second from being merged, without addressing the conflict.
 
 System Checks
-=============
+-------------
 
 django-migration-conflicts comes with several system checks that verify that your ``max_migration.txt`` files are in sync.
 These are:
@@ -93,13 +93,8 @@ These are:
 * ``dmc.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dmc.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
 
-Limitations
-===========
-
-This only works with ``.py`` migration files.
-
 Inspiration
 ===========
 
-I've seen versions of this technique implemented at my previous client `Pollen <https://pollen.co/>`__ and in `this Doordash blogpost <https://medium.com/@DoorDash/tips-for-building-high-quality-django-apps-at-scale-a5a25917b2b5>`__, and have ended up implementing it myself a couple of times.
-There's also `django-migrations-git-conflicts <https://pypi.org/project/django-migrations-git-conflicts/>`__ which does similar.
+I've seen versions of this technique implemented at my previous client `Pollen <https://pollen.co/>`__, in `this Doordash blogpost <https://medium.com/@DoorDash/tips-for-building-high-quality-django-apps-at-scale-a5a25917b2b5>`__, and have on other client projects.
+There's also `django-migrations-git-conflicts <https://pypi.org/project/django-migrations-git-conflicts/>`__ which work similarly.
