@@ -7,7 +7,7 @@ from django.core.checks import Error, Tags, register
 from django.db.migrations.loader import MigrationLoader
 from django.utils.functional import cached_property
 
-from django_migration_conflicts.compat import ModuleNotFoundError, is_namespace_module
+from django_migration_conflicts.compat import is_namespace_module
 
 
 class DjangoMigrationConflictsAppConfig(AppConfig):
