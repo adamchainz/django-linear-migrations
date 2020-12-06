@@ -1,10 +1,4 @@
-import builtins
 import sys
-
-if sys.version_info >= (3, 6):  # pragma: no cover
-    ModuleNotFoundError = builtins.ModuleNotFoundError
-else:  # pragma: no cover
-    ModuleNotFoundError = ImportError
 
 if sys.version_info >= (3, 7):  # pragma: no cover
 
