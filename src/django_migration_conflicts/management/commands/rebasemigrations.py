@@ -1,4 +1,5 @@
-from importlib import import_module
+import ast
+from pathlib import Path
 
 from django.apps import apps
 from django.core.management import BaseCommand, CommandError
@@ -9,6 +10,8 @@ from django_migration_conflicts.apps import MigrationDetails, is_first_party_app
 class Command(BaseCommand):
     help = ""
 
+    requires_system_checks = False
+
     def add_arguments(self, parser):
         parser.add_argument(
             "app_label",
@@ -16,14 +19,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, app_label, **options):
-        # quit if not interactive
+        # quit if not interactive?
+
         app_config = apps.get_app_config(app_label)
         if not is_first_party_app_config(app_config):
             raise CommandError("{} is not a first-party app.".format(app_label))
 
         migration_details = MigrationDetails(app_label)
         max_migration_txt = migration_details.dir / "max_migration.txt"
-        migration_names = self.find_migration_names(max_migration_txt)
+        migration_names = find_migration_names(max_migration_txt)
         if migration_names is None:
             raise CommandError(
                 "{}'s max_migration.txt does not seem to contain a merge conflict".format(
@@ -56,42 +60,68 @@ class Command(BaseCommand):
             )
 
         content = rebased_migration_path.read_text()
-        before_deps, deps, deps_suffix = content.partition("dependencies = [")
-        if not deps:
+        before_deps, deps_open, deps_suffix = content.partition("dependencies = [")
+        if not deps_open:
             raise CommandError(
                 "Could not find 'dependencies = [' in {!r}".format(
                     rebased_migration_filename
                 )
             )
-        # wrong approach since we don't know the name of the *previous* migration
-        # should try working if there's only *one* this-app dependency in the rebeased migration
-        deps, deps_close, after_deps = content.partition("]")
+        deps, deps_close, after_deps = deps_suffix.partition("]")
         if not deps_close:
             raise CommandError(
                 "Could not find ']' after 'dependencies = [' in {!r}".format(
                     rebased_migration_filename
                 )
             )
-        deps_start, found_merged_name, deps_end = deps.partition(merged_migration_name)
-        if not found_merged_name:
-            raise CommandError("Could not find {!r} in dependencies in {!r}".format(merged_migration_name, rebased_migration_filename))
-        if not deps_start.endswith(("'", '"')) or not deps_end.endswith(("'", '"')):
-            raise CommandError("{!r} in dependencies of {!r} does not appear as a whole string".format(merged_migration_name, rebased_migration_filename))
-        deps =
 
-        rebased_migration_path.write_text(before_deps + deps + deps_close + after_deps)
+        try:
+            dependencies = ast.literal_eval("[" + deps + "]")
+        except SyntaxError:
+            raise CommandError(
+                "Encountered a SyntaxError trying to parse dependencies = [{!r}]".format(
+                    deps
+                )
+            )
 
-        # open second conflicted migration
-        # find "dependencies = [" up to next "]"
-        # if conflicted name, surrounded by some kind of quote mark, appears in that substring - replace it. save. report success
-        # else report failure.
+        num_this_app_dependencies = len([d for d in dependencies if d[0] == app_label])
+        if num_this_app_dependencies != 1:
+            raise CommandError(
+                "Cannot edit migration {!r} since it has two dependencies within the app."
+            )
 
-    def find_migration_names(self, max_migration_txt):
-        # handle file not existing
-        lines = max_migration_txt.read_text().splitlines()
+        new_dependencies = []
+        for dependency_app_label, migration_name in dependencies:
+            if dependency_app_label == app_label:
+                new_dependencies.append((app_label, merged_migration_name))
+            else:
+                dependencies.append((dependency_app_label, migration_name))
 
-        if not lines[0].startswith("<<<<<<<"):
-            return None
-        if not lines[-1].startswith("<<<<<<<"):
-            return None
-        return lines[1].strip(), lines[-2].strip()
+        new_content = (
+            before_deps + "dependencies = " + repr(new_dependencies) + after_deps
+        )
+        # run black if installed
+        rebased_migration_path.write_text(new_content)
+
+        merged_number, _rest = merged_migration_name.split("_", 1)
+        rebased_number = int(merged_number) + 1
+        new_name = list(rebased_migration_path.parts)
+        new_name[-1] = (
+            str(rebased_number).zfill(4) + "_" + new_name[-1].split("_", 1)[1]
+        )
+        new_path = Path(*new_name)
+        rebased_migration_path.rename(new_path)
+
+        # calculate new name more neatly
+        max_migration_txt.write_text(new_name[-1].rsplit(".", 1)[0] + "\n")
+
+
+def find_migration_names(max_migration_txt):
+    # TODO: handle file not existing
+    lines = max_migration_txt.read_text().splitlines()
+
+    if not lines[0].startswith("<<<<<<<"):
+        return None
+    if not lines[-1].startswith(">>>>>>>"):
+        return None
+    return lines[1].strip(), lines[-2].strip()
