@@ -18,14 +18,16 @@ class DjangoMigrationConflictsAppConfig(AppConfig):
         register(Tags.models)(check_max_migration_files)
 
 
+def is_first_party_app_config(app_config):
+    # Check if it seems to be installed in a virtualenv
+    path = Path(app_config.path)
+    return "site-packages" not in path.parts
+
+
 def first_party_app_configs():
     for app_config in apps.get_app_configs():
-        # Skip apps that seem to be in virtualenvs
-        path = Path(app_config.path)
-        if "site-packages" in path.parts:
-            continue
-
-        yield app_config
+        if is_first_party_app_config(app_config):
+            yield app_config
 
 
 class MigrationDetails:
@@ -34,9 +36,11 @@ class MigrationDetails:
 
         # Some logic duplicated from MigrationLoader.load_disk, but avoiding
         # loading all migrations since that's relatively slow.
-        migrations_module_name, _explicit = MigrationLoader.migrations_module(app_label)
+        self.migrations_module_name, _explicit = MigrationLoader.migrations_module(
+            app_label
+        )
         try:
-            self.migrations_module = import_module(migrations_module_name)
+            self.migrations_module = import_module(self.migrations_module_name)
         except ModuleNotFoundError:
             # Unmigrated app
             self.migrations_module = None

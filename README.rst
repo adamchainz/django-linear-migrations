@@ -81,6 +81,7 @@ It enforces the use of a *linear* migration history, avoiding merge migrations a
 It does this by making ``makemigrations`` record the name of the latest migration in per-app ``max_migration.txt`` files.
 These files will then cause a merge conflicts in your source control tool (Git, Mercurial, etc.) in the case of migrations for the same app being developed in parallel.
 The first merged migration on an app will prevent the second from being merged, without addressing the conflict.
+The included ``rebase-migration`` command can help automatically fix the conflict.
 
 System Checks
 -------------
@@ -92,6 +93,73 @@ These are:
 * ``dmc.E002``: ``<app_label>``'s max_migration.txt contains multiple lines.
 * ``dmc.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dmc.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
+
+``rebase-migration`` command
+----------------------------
+
+This management command can help you fix migration conflicts.
+Following a conflicted “rebase” operation in your source control tool, run it with the name of the app to auto-fix the migrations for:
+
+.. code-block:: console
+
+    $ python manage.py rebase-migration <app_label>
+
+Let's walk through an example using Git, although it should extend to other source control tools.
+
+Imaigne you were working on your project's ``books`` app in a feature branch and created a migration called ``0002_longer_titles``.
+Meanwhile a commit has been merged to your ``main`` branch with a *different* 2nd migration for ``books`` called ``0002_author_nicknames``.
+Thanks to django-migration-conflicts, the ``max_migration.txt`` file will show as conflicted between your feature and main branches.
+
+You can start to fix the conflict by pulling your latest ``main`` branch, then rebasing your ``titles`` branch on top of it.
+When you do this, Git will report the conflict:
+
+.. code-block:: console
+
+    $ git switch main
+    $ git pull
+    ...
+    $ git switch titles
+    $ git rebase main
+    Auto-merging books/models.py
+    CONFLICT (content): Merge conflict in books/migrations/max_migration.txt
+    error: could not apply 123456789... Increase Book title length
+    Resolve all conflicts manually, mark them as resolved with
+    "git add/rm <conflicted_files>", then run "git rebase --continue".
+    You can instead skip this commit: run "git rebase --skip".
+    To abort and get back to the state before "git rebase", run "git rebase --abort".
+    Could not apply 123456789... Increase Book title length
+
+If you look at the contents of the ``books`` app's ``max_migration.txt`` at this point, it will look something like this:
+
+.. code-block:: console
+
+    $ cat books/migrations/max_migration.txt
+    <<<<<<< HEAD
+    0002_author_nicknames
+    =======
+    0002_longer_titles
+    >>>>>>> 123456789 (Increase Book title length)
+
+It's at this point you can use ``rebase-migration`` to automatically fix the ``books`` migration history:
+
+.. code-block:: console
+
+    $ python manage.py rebease-migration books
+    Renamed 0002_longer_titles.py to 0003_longer_titles.py, updated its dependencies, and updated max_migration.txt.
+
+This places the conflcited migration on the end of the migration history.
+It renames the file appropriately, modifies its ``dependencies = [...]`` declaration, and updates the migration named in ``max_migration.txt`` appropriately.
+
+After this, you should be able to continue the rebase:
+
+.. code-block:: console
+
+    $ git add books/migrations
+    $ git rebase --continue
+
+Note this might not always be the *correct* thing to do.
+If the migrations in main and feature branches have both affected the same models, rebasing the migration on the end may not make sense.
+However, such parallel changes would *normally* cause conflicts in other parts of the source code as well, such as in the models.
 
 Inspiration
 ===========
