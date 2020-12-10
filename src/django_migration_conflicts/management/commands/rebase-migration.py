@@ -39,7 +39,8 @@ class Command(BaseCommand):
         )
         if migration_names is None:
             raise CommandError(
-                f"{app_label}'s max_migration.txt does not seem to contain a merge conflict."
+                f"{app_label}'s max_migration.txt does not seem to contain a"
+                + " merge conflict."
             )
         merged_migration_name, rebased_migration_name = migration_names
         if merged_migration_name not in migration_details.names:
