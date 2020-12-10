@@ -1,4 +1,5 @@
 import ast
+import re
 from pathlib import Path
 
 from django.apps import apps
@@ -8,19 +9,22 @@ from django_migration_conflicts.apps import MigrationDetails, is_first_party_app
 
 
 class Command(BaseCommand):
-    help = ""
+    help = (
+        "Fix a conflict in your migration history by rebasing the conflicting"
+        + " migration on to the end of the app's migration history."
+    )
 
+    # Checks disabled because the django-migration-conflicts' checks would
+    # prevent us continuing
     requires_system_checks = False
 
     def add_arguments(self, parser):
         parser.add_argument(
             "app_label",
-            help="Specify the app label to rebase migrations for.",
+            help="Specify the app label to rebase the migration for.",
         )
 
     def handle(self, app_label, **options):
-        # quit if not interactive?
-
         app_config = apps.get_app_config(app_label)
         if not is_first_party_app_config(app_config):
             raise CommandError("{} is not a first-party app.".format(app_label))
@@ -60,23 +64,22 @@ class Command(BaseCommand):
             )
 
         content = rebased_migration_path.read_text()
-        before_deps, deps_open, deps_suffix = content.partition("dependencies = [")
-        if not deps_open:
+        split_result = re.split(
+            r"(?<=dependencies = )(\[.*?\])",
+            content,
+            maxsplit=1,
+            flags=re.DOTALL,
+        )
+        if len(split_result) != 3:
             raise CommandError(
-                "Could not find 'dependencies = [' in {!r}".format(
+                "Could not find dependencies = [...] in {!r}".format(
                     rebased_migration_filename
                 )
             )
-        deps, deps_close, after_deps = deps_suffix.partition("]")
-        if not deps_close:
-            raise CommandError(
-                "Could not find ']' after 'dependencies = [' in {!r}".format(
-                    rebased_migration_filename
-                )
-            )
+        before_deps, deps, after_deps = split_result
 
         try:
-            dependencies = ast.literal_eval("[" + deps + "]")
+            dependencies = ast.literal_eval(deps)
         except SyntaxError:
             raise CommandError(
                 "Encountered a SyntaxError trying to parse dependencies = [{!r}]".format(
@@ -97,10 +100,7 @@ class Command(BaseCommand):
             else:
                 dependencies.append((dependency_app_label, migration_name))
 
-        new_content = (
-            before_deps + "dependencies = " + repr(new_dependencies) + after_deps
-        )
-        # run black if installed
+        new_content = before_deps + repr(new_dependencies) + after_deps
         rebased_migration_path.write_text(new_content)
 
         merged_number, _rest = merged_migration_name.split("_", 1)
@@ -114,6 +114,11 @@ class Command(BaseCommand):
 
         # calculate new name more neatly
         max_migration_txt.write_text(new_name[-1].rsplit(".", 1)[0] + "\n")
+
+        self.stdout.write(
+            f"Renamed {rebased_migration_path.parts[-1]} to {new_name[-1]},"
+            + " updated its dependencies, and updated max_migration.txt."
+        )
 
 
 def find_migration_names(max_migration_txt):
