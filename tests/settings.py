@@ -12,5 +12,5 @@ TIME_ZONE = "UTC"
 
 INSTALLED_APPS = [
     "tests.testapp",
-    "django_migration_conflicts",
+    "django_linear_migrations",
 ]

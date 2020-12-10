@@ -5,7 +5,7 @@ from pathlib import Path
 from django.apps import apps
 from django.core.management import BaseCommand, CommandError
 
-from django_migration_conflicts.apps import MigrationDetails, is_first_party_app_config
+from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
 
 
 class Command(BaseCommand):
@@ -14,7 +14,7 @@ class Command(BaseCommand):
         + " migration on to the end of the app's migration history."
     )
 
-    # Checks disabled because the django-migration-conflicts' checks would
+    # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
     requires_system_checks = False
 

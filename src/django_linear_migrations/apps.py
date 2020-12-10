@@ -7,12 +7,12 @@ from django.core.checks import Error, Tags, register
 from django.db.migrations.loader import MigrationLoader
 from django.utils.functional import cached_property
 
-from django_migration_conflicts.compat import is_namespace_module
+from django_linear_migrations.compat import is_namespace_module
 
 
 class DjangoMigrationConflictsAppConfig(AppConfig):
-    name = "django_migration_conflicts"
-    verbose_name = "django-migration-conflicts"
+    name = "django_linear_migrations"
+    verbose_name = "django-linear-migrations"
 
     def ready(self):
         register(Tags.models)(check_max_migration_files)
@@ -70,30 +70,30 @@ class MigrationDetails:
         }
 
 
-dmc_E001_msg = "{app_label}'s max_migration.txt does not exist."
-dmc_E001_hint = (
-    "If you just installed django-migration-conflicts, run 'python manage.py"
+dlm_E001_msg = "{app_label}'s max_migration.txt does not exist."
+dlm_E001_hint = (
+    "If you just installed django-linear-migrations, run 'python manage.py"
     + " makemigrations --initialize-max-migrations'. Otherwise, check how it"
     + " has gone missing."
 )
 
-dmc_E002_msg = "{app_label}'s max_migration.txt contains multiple lines."
-dmc_E002_hint = (
+dlm_E002_msg = "{app_label}'s max_migration.txt contains multiple lines."
+dlm_E002_hint = (
     "This may be the result of a git merge. Fix the file to contain only the"
     + " name of the latest migration."
 )
 
-dmc_E003_msg = (
+dlm_E003_msg = (
     "{app_label}'s max_migration.txt points to non-existent migration"
     + " '{max_migration_name}'."
 )
-dmc_E003_hint = "Edit the max_migration.txt to contain the latest migration's name."
+dlm_E003_hint = "Edit the max_migration.txt to contain the latest migration's name."
 
-dmc_E004_msg = (
+dlm_E004_msg = (
     "{app_label}'s max_migration.txt contains '{max_migration_name}',"
     + " but the latest migration is '{real_max_migration_name}'."
 )
-dmc_E004_hint = (
+dlm_E004_hint = (
     "Edit max_migration.txt to contain '{real_max_migration_name}' or rebase"
     + " '{max_migration_name}' to be the latest migration."
 )
@@ -115,9 +115,9 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
         if not max_migration_txt.exists():
             errors.append(
                 Error(
-                    id="dmc.E001",
-                    msg=dmc_E001_msg.format(app_label=app_label),
-                    hint=dmc_E001_hint,
+                    id="dlm.E001",
+                    msg=dlm_E001_msg.format(app_label=app_label),
+                    hint=dlm_E001_hint,
                 )
             )
             continue
@@ -126,9 +126,9 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
         if len(max_migration_txt_lines) > 1:
             errors.append(
                 Error(
-                    id="dmc.E002",
-                    msg=dmc_E002_msg.format(app_label=app_label),
-                    hint=dmc_E002_hint,
+                    id="dlm.E002",
+                    msg=dlm_E002_msg.format(app_label=app_label),
+                    hint=dlm_E002_hint,
                 )
             )
             continue
@@ -137,11 +137,11 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
         if max_migration_name not in migration_details.names:
             errors.append(
                 Error(
-                    id="dmc.E003",
-                    msg=dmc_E003_msg.format(
+                    id="dlm.E003",
+                    msg=dlm_E003_msg.format(
                         app_label=app_label, max_migration_name=max_migration_name
                     ),
-                    hint=dmc_E003_hint,
+                    hint=dlm_E003_hint,
                 )
             )
             continue
@@ -150,13 +150,13 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(
-                    id="dmc.E004",
-                    msg=dmc_E004_msg.format(
+                    id="dlm.E004",
+                    msg=dlm_E004_msg.format(
                         app_label=app_label,
                         max_migration_name=max_migration_name,
                         real_max_migration_name=real_max_migration_name,
                     ),
-                    hint=dmc_E004_hint.format(
+                    hint=dlm_E004_hint.format(
                         app_label=app_label,
                         max_migration_name=max_migration_name,
                         real_max_migration_name=real_max_migration_name,
