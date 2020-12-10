@@ -6,7 +6,7 @@ from textwrap import dedent
 from unittest import mock
 
 import pytest
-from django.core.management import call_command, CommandError
+from django.core.management import CommandError, call_command
 from django.test import SimpleTestCase, TestCase, override_settings
 
 module = import_module(
