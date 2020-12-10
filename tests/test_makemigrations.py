@@ -8,7 +8,7 @@ import pytest
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 
-from django_migration_conflicts.management.commands import makemigrations
+from django_linear_migrations.management.commands import makemigrations
 
 
 class MakeMigrationsTests(TestCase):
@@ -84,7 +84,7 @@ class MakeMigrationsTests(TestCase):
 
     def test_create_max_migrations_ignored_app_label(self):
         out, err, returncode = self.call_command(
-            "--create-max-migration-files", "django_migration_conflicts"
+            "--create-max-migration-files", "django_linear_migrations"
         )
 
         assert out == "No max_migration.txt files need creating.\n"

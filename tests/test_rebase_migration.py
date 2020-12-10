@@ -9,9 +9,7 @@ import pytest
 from django.core.management import CommandError, call_command
 from django.test import SimpleTestCase, TestCase, override_settings
 
-module = import_module(
-    "django_migration_conflicts.management.commands.rebase-migration"
-)
+module = import_module("django_linear_migrations.management.commands.rebase-migration")
 
 
 class MakeMigrationsTests(TestCase):
