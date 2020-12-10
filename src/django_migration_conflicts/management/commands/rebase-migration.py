@@ -27,40 +27,40 @@ class Command(BaseCommand):
     def handle(self, app_label, **options):
         app_config = apps.get_app_config(app_label)
         if not is_first_party_app_config(app_config):
-            raise CommandError("{} is not a first-party app.".format(app_label))
+            raise CommandError(f"{app_label!r} is not a first-party app.")
 
         migration_details = MigrationDetails(app_label)
         max_migration_txt = migration_details.dir / "max_migration.txt"
-        migration_names = find_migration_names(max_migration_txt)
+        if not max_migration_txt.exists():
+            raise CommandError(f"{app_label} does not have a max_migration.txt.")
+
+        migration_names = find_migration_names(
+            max_migration_txt.read_text().splitlines()
+        )
         if migration_names is None:
             raise CommandError(
-                "{}'s max_migration.txt does not seem to contain a merge conflict".format(
-                    app_label
-                )
+                f"{app_label}'s max_migration.txt does not seem to contain a merge conflict."
             )
         merged_migration_name, rebased_migration_name = migration_names
         if merged_migration_name not in migration_details.names:
             raise CommandError(
-                (
-                    "Parsed {!r} as the already-merged migration name from {}'s"
-                    + " max_migration.txt, but this migration does not exist."
-                ).format(merged_migration_name, app_label)
+                f"Parsed {merged_migration_name!r} as the already-merged"
+                + f" migration name from {app_label}'s max_migration.txt, but"
+                + " this migration does not exist."
             )
         if rebased_migration_name not in migration_details.names:
             raise CommandError(
-                (
-                    "Parsed {!r} as the rebased migration name from {}'s"
-                    + " max_migration.txt, but this migration does not exist."
-                ).format(rebased_migration_name, app_label)
+                f"Parsed {rebased_migration_name!r} as the rebased migration"
+                + f" name from {app_label}'s max_migration.txt, but this"
+                + " migration does not exist."
             )
 
         rebased_migration_filename = "{}.py".format(rebased_migration_name)
         rebased_migration_path = migration_details.dir / rebased_migration_filename
         if not rebased_migration_path.exists():
             raise CommandError(
-                "Detected {!r} as the rebased migration filename, but it does not exist.".format(
-                    rebased_migration_filename
-                )
+                f"Detected {rebased_migration_filename!r} as the rebased"
+                + " migration filename, but it does not exist."
             )
 
         content = rebased_migration_path.read_text()
@@ -72,9 +72,8 @@ class Command(BaseCommand):
         )
         if len(split_result) != 3:
             raise CommandError(
-                "Could not find dependencies = [...] in {!r}".format(
-                    rebased_migration_filename
-                )
+                "Could not find dependencies = [...] in"
+                + f" {rebased_migration_filename!r}"
             )
         before_deps, deps, after_deps = split_result
 
@@ -82,15 +81,14 @@ class Command(BaseCommand):
             dependencies = ast.literal_eval(deps)
         except SyntaxError:
             raise CommandError(
-                "Encountered a SyntaxError trying to parse dependencies = [{!r}]".format(
-                    deps
-                )
+                f"Encountered a SyntaxError trying to parse 'dependencies = {deps}'."
             )
 
         num_this_app_dependencies = len([d for d in dependencies if d[0] == app_label])
         if num_this_app_dependencies != 1:
             raise CommandError(
-                "Cannot edit migration {!r} since it has two dependencies within the app."
+                f"Cannot edit {rebased_migration_filename!r} since it has two"
+                + f" dependencies within {app_label}."
             )
 
         new_dependencies = []
@@ -98,33 +96,31 @@ class Command(BaseCommand):
             if dependency_app_label == app_label:
                 new_dependencies.append((app_label, merged_migration_name))
             else:
-                dependencies.append((dependency_app_label, migration_name))
+                new_dependencies.append((dependency_app_label, migration_name))
 
         new_content = before_deps + repr(new_dependencies) + after_deps
-        rebased_migration_path.write_text(new_content)
 
-        merged_number, _rest = merged_migration_name.split("_", 1)
-        rebased_number = int(merged_number) + 1
-        new_name = list(rebased_migration_path.parts)
-        new_name[-1] = (
-            str(rebased_number).zfill(4) + "_" + new_name[-1].split("_", 1)[1]
-        )
-        new_path = Path(*new_name)
+        merged_number, _merged_rest = merged_migration_name.split("_", 1)
+        _rebased_number, rebased_rest = rebased_migration_name.split("_", 1)
+        new_number = int(merged_number) + 1
+        new_name = str(new_number).zfill(4) + "_" + rebased_rest
+        new_path_parts = rebased_migration_path.parts[:-1] + (f"{new_name}.py",)
+        new_path = Path(*new_path_parts)
+
         rebased_migration_path.rename(new_path)
-
-        # calculate new name more neatly
-        max_migration_txt.write_text(new_name[-1].rsplit(".", 1)[0] + "\n")
+        new_path.write_text(new_content)
+        max_migration_txt.write_text(f"{new_name}\n")
 
         self.stdout.write(
-            f"Renamed {rebased_migration_path.parts[-1]} to {new_name[-1]},"
+            f"Renamed {rebased_migration_path.parts[-1]} to {new_path.parts[-1]},"
             + " updated its dependencies, and updated max_migration.txt."
         )
 
 
-def find_migration_names(max_migration_txt):
-    # TODO: handle file not existing
-    lines = max_migration_txt.read_text().splitlines()
-
+def find_migration_names(max_migration_lines):
+    lines = max_migration_lines
+    if len(lines) <= 1:
+        return None
     if not lines[0].startswith("<<<<<<<"):
         return None
     if not lines[-1].startswith(">>>>>>>"):
