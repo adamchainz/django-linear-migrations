@@ -34,6 +34,31 @@ class MakeMigrationsTests(TestCase):
             returncode = exc.code
         return out.getvalue(), err.getvalue(), returncode
 
+    def test_success_no_migrations_dir(self):
+        self.migrations_dir.rmdir()
+
+        out, err, returncode = self.call_command()
+
+        assert out == "No max_migration.txt files need creating.\n"
+        assert err == ""
+        assert returncode == 0
+
+    def test_success_empty_migrations_dir(self):
+        out, err, returncode = self.call_command()
+
+        assert out == "No max_migration.txt files need creating.\n"
+        assert err == ""
+        assert returncode == 0
+
+    def test_success_only_init(self):
+        (self.migrations_dir / "__init__.py").touch()
+
+        out, err, returncode = self.call_command()
+
+        assert out == "No max_migration.txt files need creating.\n"
+        assert err == ""
+        assert returncode == 0
+
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").touch()

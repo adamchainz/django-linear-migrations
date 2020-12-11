@@ -43,8 +43,11 @@ class Command(BaseCommand):
                 continue
 
             migration_details = MigrationDetails(app_config.label)
+            if not migration_details.has_migrations:
+                continue
+
             max_migration_txt = migration_details.dir / "max_migration.txt"
-            if not max_migration_txt.exists():
+            if not max_migration_txt.exists() and len(migration_details.names) > 0:
                 max_migration_name = max(migration_details.names)
                 max_migration_txt.write_text(max_migration_name + "\n")
                 self.stdout.write(
