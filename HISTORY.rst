@@ -2,6 +2,9 @@
 History
 =======
 
+1.0.2 (2020-12-11)
+------------------
+
 * Fix ``create-max-migration-files`` for apps without migrations folders or
   files.
 
