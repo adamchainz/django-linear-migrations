@@ -17,6 +17,8 @@ django-linear-migrations
 
 Ensure your migration history is linear.
 
+For a bit of background, see the `introductory blog post <https://adamj.eu/tech/2020/12/10/introducing-django-linear-migrations/>`__.
+
 Requirements
 ============
 
