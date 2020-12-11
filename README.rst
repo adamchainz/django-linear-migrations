@@ -68,7 +68,7 @@ Third, run this one-off command for installation:
 
 .. code-block:: sh
 
-    python manage.py makemigrations --create-max-migration-files
+    python manage.py create-max-migration-files
 
 This creates a new ``max_migration.txt`` file in each of your first-party apps’ ``migrations`` directories and exits.
 More on those files below...
