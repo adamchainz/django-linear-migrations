@@ -164,5 +164,7 @@ However, such parallel changes would *normally* cause conflicts in other parts o
 Inspiration
 ===========
 
-I've seen versions of this technique implemented at my previous client `Pollen <https://pollen.co/>`__, in `this Doordash blogpost <https://medium.com/@DoorDash/tips-for-building-high-quality-django-apps-at-scale-a5a25917b2b5>`__, and on other client projects.
-There's also `django-migrations-git-conflicts <https://pypi.org/project/django-migrations-git-conflicts/>`__ which work similarly.
+I’ve seen similar techniques to the one implemented by django-linear-migrations at several places, and they acted as the inspiration for putting this package together.
+My previous client `Pollen <https://pollen.co/>`__ and current client `ev.energy <https://ev.energy/>`__ both have implementations.
+This `Doordash blogpost <https://medium.com/@DoorDash/tips-for-building-high-quality-django-apps-at-scale-a5a25917b2b5>`__ covers a similar system that uses a single file for tracking latest migrations.
+And there's also a package called `django-migrations-git-conflicts <https://pypi.org/project/django-migrations-git-conflicts/>`__ which works fairly similarly.
