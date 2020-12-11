@@ -106,7 +106,7 @@ Following a conflicted “rebase” operation in your source control tool, run i
 
 Let's walk through an example using Git, although it should extend to other source control tools.
 
-Imaigne you were working on your project's ``books`` app in a feature branch and created a migration called ``0002_longer_titles``.
+Imagine you were working on your project's ``books`` app in a feature branch and created a migration called ``0002_longer_titles``.
 Meanwhile a commit has been merged to your ``main`` branch with a *different* 2nd migration for ``books`` called ``0002_author_nicknames``.
 Thanks to django-linear-migrations, the ``max_migration.txt`` file will show as conflicted between your feature and main branches.
 
