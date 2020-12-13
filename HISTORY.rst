@@ -2,6 +2,8 @@
 History
 =======
 
+* Rename app config class to ``DjangoLinearMigrationsAppConfig``.
+
 1.0.2 (2020-12-11)
 ------------------
 

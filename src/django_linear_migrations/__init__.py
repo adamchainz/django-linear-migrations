@@ -1,1 +1,1 @@
-default_app_config = "django_linear_migrations.apps.DjangoMigrationConflictsAppConfig"
+default_app_config = "django_linear_migrations.apps.DjangoLinearMigrationsAppConfig"

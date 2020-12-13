@@ -10,7 +10,7 @@ from django.utils.functional import cached_property
 from django_linear_migrations.compat import is_namespace_module
 
 
-class DjangoMigrationConflictsAppConfig(AppConfig):
+class DjangoLinearMigrationsAppConfig(AppConfig):
     name = "django_linear_migrations"
     verbose_name = "django-linear-migrations"
 
