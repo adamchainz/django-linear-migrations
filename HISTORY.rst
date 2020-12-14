@@ -4,6 +4,9 @@ History
 
 * Also assume modules in ``dist-packages`` are third-party apps.
 
+  Thanks to Serkan Hosca for `Pull Request #21
+  <https://github.com/adamchainz/django-linear-migrations/pull/21>`__.
+
 1.1.0 (2020-12-13)
 ------------------
 
