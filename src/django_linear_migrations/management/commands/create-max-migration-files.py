@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 continue
 
             max_migration_txt = migration_details.dir / "max_migration.txt"
-            if not max_migration_txt.exists() and len(migration_details.names) > 0:
+            if not max_migration_txt.exists():
                 max_migration_name = max(migration_details.names)
                 max_migration_txt.write_text(max_migration_name + "\n")
                 self.stdout.write(

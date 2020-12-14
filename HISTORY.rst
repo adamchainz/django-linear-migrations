@@ -2,6 +2,12 @@
 History
 =======
 
+* Made check for whether migrations exist consistent between the system checks
+  and ``create-max-migration-files``.
+
+  Thanks to @ahumeau for the report in `Issue #20
+  <https://github.com/adamchainz/django-linear-migrations/issues/20>`__.
+
 * Also assume modules in ``dist-packages`` are third-party apps.
 
   Thanks to Serkan Hosca for `Pull Request #21
