@@ -2,6 +2,8 @@
 History
 =======
 
+* Also assume modules in ``dist-packages`` are third-party apps.
+
 1.1.0 (2020-12-13)
 ------------------
 

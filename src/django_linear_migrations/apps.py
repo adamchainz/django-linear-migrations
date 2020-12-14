@@ -21,7 +21,7 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
 def is_first_party_app_config(app_config):
     # Check if it seems to be installed in a virtualenv
     path = Path(app_config.path)
-    return "site-packages" not in path.parts
+    return "site-packages" not in path.parts and "dist-packages" not in path.parts
 
 
 def first_party_app_configs():
