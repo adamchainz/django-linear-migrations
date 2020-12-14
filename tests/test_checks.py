@@ -51,6 +51,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E001(self):
         (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
 
         result = check_max_migration_files()
 
@@ -60,6 +61,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E002(self):
         (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
         (self.migrations_dir / "max_migration.txt").write_text("line1\nline2\n")
 
         result = check_max_migration_files()

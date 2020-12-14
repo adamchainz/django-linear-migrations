@@ -55,6 +55,7 @@ class MigrationDetails:
             and not is_namespace_module(self.migrations_module)
             # Django ignores non-package migrations modules
             and hasattr(self.migrations_module, "__path__")
+            and len(self.names) > 0
         )
 
     @cached_property
