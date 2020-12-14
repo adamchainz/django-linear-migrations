@@ -70,35 +70,6 @@ class MigrationDetails:
         }
 
 
-dlm_E001_msg = "{app_label}'s max_migration.txt does not exist."
-dlm_E001_hint = (
-    "If you just installed django-linear-migrations, run 'python manage.py"
-    + " create-max-migration-files'. Otherwise, check how it"
-    + " has gone missing."
-)
-
-dlm_E002_msg = "{app_label}'s max_migration.txt contains multiple lines."
-dlm_E002_hint = (
-    "This may be the result of a git merge. Fix the file to contain only the"
-    + " name of the latest migration."
-)
-
-dlm_E003_msg = (
-    "{app_label}'s max_migration.txt points to non-existent migration"
-    + " '{max_migration_name}'."
-)
-dlm_E003_hint = "Edit the max_migration.txt to contain the latest migration's name."
-
-dlm_E004_msg = (
-    "{app_label}'s max_migration.txt contains '{max_migration_name}',"
-    + " but the latest migration is '{real_max_migration_name}'."
-)
-dlm_E004_hint = (
-    "Edit max_migration.txt to contain '{real_max_migration_name}' or rebase"
-    + " '{max_migration_name}' to be the latest migration."
-)
-
-
 def check_max_migration_files(*, app_configs=None, **kwargs):
     errors = []
     for app_config in first_party_app_configs():
@@ -116,8 +87,12 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dlm.E001",
-                    msg=dlm_E001_msg.format(app_label=app_label),
-                    hint=dlm_E001_hint,
+                    msg=f"{app_label}'s max_migration.txt does not exist.",
+                    hint=(
+                        "If you just installed django-linear-migrations, run"
+                        + " 'python manage.py create-max-migration-files'."
+                        + " Otherwise, check how it has gone missing."
+                    ),
                 )
             )
             continue
@@ -127,8 +102,12 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dlm.E002",
-                    msg=dlm_E002_msg.format(app_label=app_label),
-                    hint=dlm_E002_hint,
+                    msg=f"{app_label}'s max_migration.txt contains multiple lines.",
+                    hint=(
+                        "This may be the result of a git merge. Fix the file"
+                        + " to contain only the name of the latest migration,"
+                        + " or maybe use the 'rebase-migartion' command."
+                    ),
                 )
             )
             continue
@@ -138,10 +117,14 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dlm.E003",
-                    msg=dlm_E003_msg.format(
-                        app_label=app_label, max_migration_name=max_migration_name
+                    msg=(
+                        f"{app_label}'s max_migration.txt points to"
+                        + f" non-existent migration '{max_migration_name}'."
                     ),
-                    hint=dlm_E003_hint,
+                    hint=(
+                        "Edit the max_migration.txt to contain the latest"
+                        + " migration's name."
+                    ),
                 )
             )
             continue
@@ -151,15 +134,15 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
             errors.append(
                 Error(
                     id="dlm.E004",
-                    msg=dlm_E004_msg.format(
-                        app_label=app_label,
-                        max_migration_name=max_migration_name,
-                        real_max_migration_name=real_max_migration_name,
+                    msg=(
+                        f"{app_label}'s max_migration.txt contains"
+                        + f" '{max_migration_name}', but the latest migration"
+                        + f" is '{real_max_migration_name}'."
                     ),
-                    hint=dlm_E004_hint.format(
-                        app_label=app_label,
-                        max_migration_name=max_migration_name,
-                        real_max_migration_name=real_max_migration_name,
+                    hint=(
+                        "Edit max_migration.txt to contain"
+                        + f" '{real_max_migration_name}' or rearrange the"
+                        + " migrations into the correct order."
                     ),
                 )
             )
