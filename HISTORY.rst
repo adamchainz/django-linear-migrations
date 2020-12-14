@@ -2,6 +2,9 @@
 History
 =======
 
+1.2.0 (2020-12-14)
+------------------
+
 * Made check for whether migrations exist consistent between the system checks
   and ``create-max-migration-files``.
 
