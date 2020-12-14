@@ -73,7 +73,7 @@ class MigrationDetails:
 dlm_E001_msg = "{app_label}'s max_migration.txt does not exist."
 dlm_E001_hint = (
     "If you just installed django-linear-migrations, run 'python manage.py"
-    + " makemigrations --create-max-migrations'. Otherwise, check how it"
+    + " create-max-migration-files'. Otherwise, check how it"
     + " has gone missing."
 )
 
