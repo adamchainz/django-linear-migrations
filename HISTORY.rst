@@ -2,6 +2,9 @@
 History
 =======
 
+1.2.1 (2020-12-15)
+------------------
+
 * Handle apps with whose migrations have been disabled by mapping them to
   ``None`` in the ``MIGRATION_MODULES`` setting.
 
