@@ -34,6 +34,15 @@ class MakeMigrationsTests(TestCase):
             returncode = exc.code
         return out.getvalue(), err.getvalue(), returncode
 
+    def test_success_migrations_disabledi(self):
+        self.migrations_dir.rmdir()
+        with override_settings(MIGRATION_MODULES={"testapp": None}):
+            out, err, returncode = self.call_command()
+
+        assert out == "No max_migration.txt files need creating.\n"
+        assert err == ""
+        assert returncode == 0
+
     def test_success_no_migrations_dir(self):
         self.migrations_dir.rmdir()
 

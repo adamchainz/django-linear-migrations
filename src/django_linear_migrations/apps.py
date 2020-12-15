@@ -39,14 +39,17 @@ class MigrationDetails:
         self.migrations_module_name, _explicit = MigrationLoader.migrations_module(
             app_label
         )
-        try:
-            self.migrations_module = import_module(self.migrations_module_name)
-        except ModuleNotFoundError:
-            # Unmigrated app
+        if self.migrations_module_name is None:
             self.migrations_module = None
         else:
-            if do_reload:
-                reload(self.migrations_module)
+            try:
+                self.migrations_module = import_module(self.migrations_module_name)
+            except ModuleNotFoundError:
+                # Unmigrated app
+                self.migrations_module = None
+            else:
+                if do_reload:
+                    reload(self.migrations_module)
 
     @property
     def has_migrations(self):
