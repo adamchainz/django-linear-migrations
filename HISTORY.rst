@@ -2,6 +2,12 @@
 History
 =======
 
+* Handle apps with whose migrations have been disabled by mapping them to
+  ``None`` in the ``MIGRATION_MODULES`` setting.
+
+  Thanks to Helmut for the report in `Issue #23
+  <https://github.com/adamchainz/django-linear-migrations/issues/23>`__.
+
 1.2.0 (2020-12-14)
 ------------------
 
