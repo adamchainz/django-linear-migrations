@@ -7,6 +7,8 @@ from unittest import mock
 
 import pytest
 from django.core.management import CommandError, call_command
+from django.db import connection
+from django.db.migrations.recorder import MigrationRecorder
 from django.test import SimpleTestCase, TestCase, override_settings
 
 module = import_module("django_linear_migrations.management.commands.rebase-migration")
@@ -138,6 +140,35 @@ class MakeMigrationsTests(TestCase):
         assert excinfo.value.args[0] == (
             "Detected '0002_longer_titles.py' as the rebased migration"
             + " filename, but it does not exist."
+        )
+
+    def test_error_for_applied_migration(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0002_longer_titles.py").touch()
+        (self.migrations_dir / "max_migration.txt").write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+        MigrationRecorder.Migration.objects.create(
+            app="testapp", name="0002_longer_titles"
+        )
+
+        with pytest.raises(CommandError) as excinfo:
+            self.call_command("testapp")
+
+        assert excinfo.value.args[0] == (
+            "Detected 0002_longer_titles as the rebased migration, but it is"
+            + " applied to the local database. Undo the rebase, reverse the"
+            + " migration, and try again."
         )
 
     def test_error_for_missing_dependencies(self):
@@ -339,3 +370,13 @@ class FindMigrationNamesTests(SimpleTestCase):
             ]
         )
         assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+
+class MigrationAppliedTests(TestCase):
+    def test_table_does_not_exist(self):
+        with connection.cursor() as cursor:
+            cursor.execute("DROP TABLE django_migrations")
+
+        result = module.migration_applied("testapp", "0001_initial")
+
+        assert result is False

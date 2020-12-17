@@ -4,6 +4,8 @@ from pathlib import Path
 
 from django.apps import apps
 from django.core.management import BaseCommand, CommandError
+from django.db import DatabaseError, connections
+from django.db.migrations.recorder import MigrationRecorder
 
 from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
 
@@ -62,6 +64,13 @@ class Command(BaseCommand):
             raise CommandError(
                 f"Detected {rebased_migration_filename!r} as the rebased"
                 + " migration filename, but it does not exist."
+            )
+
+        if migration_applied(app_label, rebased_migration_name):
+            raise CommandError(
+                f"Detected {rebased_migration_name} as the rebased migration,"
+                + " but it is applied to the local database. Undo the rebase,"
+                + " reverse the migration, and try again."
             )
 
         content = rebased_migration_path.read_text()
@@ -127,3 +136,19 @@ def find_migration_names(max_migration_lines):
     if not lines[-1].startswith(">>>>>>>"):
         return None
     return lines[1].strip(), lines[-2].strip()
+
+
+def migration_applied(app_label, migration_name):
+    Migration = MigrationRecorder.Migration
+    for alias in connections:
+        try:
+            if (
+                Migration.objects.using(alias)
+                .filter(app=app_label, name=migration_name)
+                .exists()
+            ):
+                return True
+        except DatabaseError:
+            # django_migrations table does not exist -> no migrations applied
+            pass
+    return False

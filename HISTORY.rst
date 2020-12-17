@@ -2,6 +2,9 @@
 History
 =======
 
+* Made ``rebase-migration`` abort if the migration to be rebased has been
+  applied in any local database.
+
 1.2.1 (2020-12-15)
 ------------------
 
