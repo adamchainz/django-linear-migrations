@@ -176,7 +176,7 @@ After this, you should be able to continue the rebase:
     $ git add books/migrations
     $ git rebase --continue
 
-And the migrate your local database to allow you to continue development:
+And then migrate your local database to allow you to continue development:
 
 .. code-block:: console
 
