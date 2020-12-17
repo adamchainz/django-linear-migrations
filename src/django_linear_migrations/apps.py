@@ -55,6 +55,7 @@ class MigrationDetails:
     def has_migrations(self):
         return (
             self.migrations_module is not None
+            and self.names
             and not is_namespace_module(self.migrations_module)
             # Django ignores non-package migrations modules
             and hasattr(self.migrations_module, "__path__")
