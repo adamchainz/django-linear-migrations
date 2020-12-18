@@ -1,6 +1,7 @@
 import pkgutil
 from importlib import import_module, reload
 from pathlib import Path
+from pip._internal.commands.show import search_packages_info
 
 from django.apps import AppConfig, apps
 from django.core.checks import Error, Tags, register
@@ -18,10 +19,22 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
         register(Tags.models)(check_max_migration_files)
 
 
+def is_pip_installed(app_label):
+    try:
+        # look up package info in pip
+        # if results are returned, it must be installed
+        list(search_packages_info([app_label]))[0]
+        return True
+    except IndexError:
+        return False
+
+
 def is_first_party_app_config(app_config):
     # Check if it seems to be installed in a virtualenv
     path = Path(app_config.path)
-    return "site-packages" not in path.parts and "dist-packages" not in path.parts
+    if "site-packages" in path.parts or "dist-packages" in path.parts:
+        return False
+    return not is_pip_installed(app_config.label)
 
 
 def first_party_app_configs():
