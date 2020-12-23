@@ -5,6 +5,9 @@ django-linear-migrations
 .. image:: https://img.shields.io/github/workflow/status/adamchainz/django-linear-migrations/CI/master?style=for-the-badge
    :target: https://github.com/adamchainz/django-linear-migrations/actions?workflow=CI
 
+.. image:: https://img.shields.io/coveralls/github/adamchainz/django-linear-migrations/master?style=for-the-badge
+   :target: https://coveralls.io/r/adamchainz/django-linear-migrations
+
 .. image:: https://img.shields.io/pypi/v/django-linear-migrations.svg?style=for-the-badge
    :target: https://pypi.org/project/django-linear-migrations/
 
