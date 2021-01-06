@@ -2,6 +2,9 @@
 History
 =======
 
+1.4.0 (2021-01-06)
+------------------
+
 * Add the ability to define the list of first-party apps, for cases where the
   automatic detection does not work.
 
