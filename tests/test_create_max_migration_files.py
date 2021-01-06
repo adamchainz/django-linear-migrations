@@ -34,7 +34,7 @@ class MakeMigrationsTests(TestCase):
             returncode = exc.code
         return out.getvalue(), err.getvalue(), returncode
 
-    def test_success_migrations_disabledi(self):
+    def test_success_migrations_disabled(self):
         self.migrations_dir.rmdir()
         with override_settings(MIGRATION_MODULES={"testapp": None}):
             out, err, returncode = self.call_command()
@@ -68,13 +68,36 @@ class MakeMigrationsTests(TestCase):
         assert err == ""
         assert returncode == 0
 
+    @override_settings(FIRST_PARTY_APPS=[])
+    def test_success_setting_not_first_party(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
+
+        out, err, returncode = self.call_command()
+
+        assert out == "No max_migration.txt files need creating.\n"
+        assert err == ""
+        assert returncode == 0
+
+    def test_success_dry_run(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
+
+        out, err, returncode = self.call_command("--dry-run")
+
+        assert out == "Would create max_migration.txt for testapp.\n"
+        assert err == ""
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert not max_migration_txt.exists()
+
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").touch()
 
         out, err, returncode = self.call_command()
 
-        assert out == "Created max_migration.txt for testapp\n"
+        assert out == "Created max_migration.txt for testapp.\n"
         assert err == ""
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
@@ -97,7 +120,7 @@ class MakeMigrationsTests(TestCase):
 
         out, err, returncode = self.call_command("testapp")
 
-        assert out == "Created max_migration.txt for testapp\n"
+        assert out == "Created max_migration.txt for testapp.\n"
         assert err == ""
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
@@ -111,7 +134,9 @@ class MakeMigrationsTests(TestCase):
         assert returncode == 2
 
     def test_success_ignored_app_label(self):
-        out, err, returncode = self.call_command("django_linear_migrations")
+        out, err, returncode = self.call_command(
+            "django_linear_migrations",
+        )
 
         assert out == "No max_migration.txt files need creating.\n"
         assert err == ""

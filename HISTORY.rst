@@ -2,6 +2,9 @@
 History
 =======
 
+* Add the ability to define the list of first-party apps, for cases where the
+  automatic detection does not work.
+
 1.3.0 (2020-12-17)
 ------------------
 

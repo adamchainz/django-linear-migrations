@@ -3,6 +3,7 @@ from importlib import import_module, reload
 from pathlib import Path
 
 from django.apps import AppConfig, apps
+from django.conf import settings
 from django.core.checks import Error, Tags, register
 from django.db.migrations.loader import MigrationLoader
 from django.utils.functional import cached_property
@@ -19,6 +20,9 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
 
 
 def is_first_party_app_config(app_config):
+    if settings.is_overridden("FIRST_PARTY_APPS"):
+        return app_config.label in settings.FIRST_PARTY_APPS
+
     # Check if it seems to be installed in a virtualenv
     path = Path(app_config.path)
     return "site-packages" not in path.parts and "dist-packages" not in path.parts

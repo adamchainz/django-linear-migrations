@@ -2,13 +2,10 @@ import sys
 import time
 from io import StringIO
 from textwrap import dedent
-from unittest import mock
 
 import pytest
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-
-from django_linear_migrations.management.commands import makemigrations
 
 
 class MakeMigrationsTests(TestCase):
@@ -80,11 +77,9 @@ class MakeMigrationsTests(TestCase):
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         assert max_migration_txt.read_text() == "0002_create_book\n"
 
+    @override_settings(FIRST_PARTY_APPS=[])
     def test_skips_creating_max_migration_txt_for_non_first_party_app(self):
-        with mock.patch.object(
-            makemigrations, "first_party_app_configs", return_value=[]
-        ):
-            out, err, returncode = self.call_command("testapp")
+        out, err, returncode = self.call_command("testapp")
 
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
