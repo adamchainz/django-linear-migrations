@@ -23,8 +23,14 @@ class Command(BaseCommand):
             nargs="*",
             help="Specify the app label(s) to create max migration files for.",
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            default=False,
+            help="Actually create the files.",
+        )
 
-    def handle(self, *app_labels, **options):
+    def handle(self, *app_labels, dry_run, **options):
         # Copied check from makemigrations
         app_labels = set(app_labels)
         has_bad_labels = False
@@ -48,11 +54,18 @@ class Command(BaseCommand):
 
             max_migration_txt = migration_details.dir / "max_migration.txt"
             if not max_migration_txt.exists():
-                max_migration_name = max(migration_details.names)
-                max_migration_txt.write_text(max_migration_name + "\n")
-                self.stdout.write(
-                    "Created max_migration.txt for {}".format(app_config.label)
-                )
+                if not dry_run:
+                    max_migration_name = max(migration_details.names)
+                    max_migration_txt.write_text(max_migration_name + "\n")
+                    self.stdout.write(
+                        "Created max_migration.txt for {}.".format(app_config.label)
+                    )
+                else:
+                    self.stdout.write(
+                        "Would create max_migration.txt for {}.".format(
+                            app_config.label
+                        )
+                    )
                 any_created = True
 
         if not any_created:

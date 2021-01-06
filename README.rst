@@ -69,14 +69,42 @@ If your project has a custom ``makemigrations`` command, ensure the app containi
     class Command(BaseCommand):
         ...
 
-Third, run this one-off command for installation:
+Third, check the automatic detection of first-party apps.
+Run this command:
+
+.. code-block:: sh
+
+    python manage.py create-max-migration-files --dry-run
+
+This command is for creating ``max_migration.txt`` files (more on which later) - in dry run mode it lists the apps it would make such files for.
+It tries to automatically detect which apps are first-party, i.e. belong to your project.
+The automatic detection checks the path of app’s code to see if is within a virtualenv, but this detection can sometimes fail, for example on editable packages installed with ``-e``.
+If you see any apps listed that *aren’t* part of your project, define the list of first-party apps’ labels in a ``FIRST_PARTY_APPS`` setting that you combine into ``INSTALLED_APPS``:
+
+.. code-block:: python
+
+    FIRST_PARTY_APPS = [
+
+    ]
+
+    INSTALLED_APPS = FIRST_PARTY_APPS + [
+        "django_linear_migrations",
+        ...
+    ]
+
+(Note: Django recommends you always list first-party apps first in your project so they can override things in third-party and contrib apps.)
+
+Fourth, create the ``max_migration.txt`` files for your first-party apps:
 
 .. code-block:: sh
 
     python manage.py create-max-migration-files
 
-This creates a new ``max_migration.txt`` file in each of your first-party apps’ ``migrations`` directories and exits.
-More on those files below...
+In the future, when you add a new app to your project, you’ll need to add it to ``FIRST_PARTY_APPS`` (if defined) and rerun this command for the new app’s label:
+
+.. code-block:: sh
+
+    python manage.py create-max-migration-files my_new_app
 
 Usage
 =====
