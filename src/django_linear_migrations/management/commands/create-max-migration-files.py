@@ -1,5 +1,6 @@
 import sys
 
+import django
 from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
 
@@ -14,7 +15,10 @@ class Command(BaseCommand):
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
-    requires_system_checks = False
+    if django.VERSION < (3, 2):
+        requires_system_checks = False
+    else:
+        requires_system_checks = []
 
     def add_arguments(self, parser):
         parser.add_argument(
