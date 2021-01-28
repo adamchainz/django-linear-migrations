@@ -39,13 +39,13 @@ Check out my book `Speed Up Your Django Tests <https://gumroad.com/l/suydt>`__ w
 Installation
 ============
 
-First, install with **pip**:
+**First,** install with pip:
 
 .. code-block:: bash
 
     python -m pip install django-linear-migrations
 
-Second, add the app to your ``INSTALLED_APPS`` setting:
+**Second,** add the app to your ``INSTALLED_APPS`` setting:
 
 .. code-block:: python
 
@@ -56,7 +56,7 @@ Second, add the app to your ``INSTALLED_APPS`` setting:
     ]
 
 The app relies on overriding the built-in ``makemigrations`` command.
-If your project has a custom ``makemigrations`` command, ensure the app containing your custom command is **above** ``django_linear_migrations``, and that your command subclasses its ``Command`` class:
+*If your project has a custom* ``makemigrations`` *command,* ensure the app containing your custom command is **above** ``django_linear_migrations``, and that your command subclasses its ``Command`` class:
 
 .. code-block:: python
 
@@ -69,7 +69,7 @@ If your project has a custom ``makemigrations`` command, ensure the app containi
     class Command(BaseCommand):
         ...
 
-Third, check the automatic detection of first-party apps.
+**Third,** check the automatic detection of first-party apps.
 Run this command:
 
 .. code-block:: sh
@@ -94,13 +94,14 @@ If you see any apps listed that *aren’t* part of your project, define the list
 
 (Note: Django recommends you always list first-party apps first in your project so they can override things in third-party and contrib apps.)
 
-Fourth, create the ``max_migration.txt`` files for your first-party apps:
+**Fourth,** create the ``max_migration.txt`` files for your first-party apps by re-running the command without the dry run flag:
 
 .. code-block:: sh
 
     python manage.py create-max-migration-files
 
-In the future, when you add a new app to your project, you’ll need to add it to ``FIRST_PARTY_APPS`` (if defined) and rerun this command for the new app’s label:
+In the future, when you add a new app to your project, you’ll need to create its ``max_migration.txt`` file.
+If you defined ``FIRST_PARTY_APPS``, add it there, then rerun the creation command for the new app by specifying its label:
 
 .. code-block:: sh
 
