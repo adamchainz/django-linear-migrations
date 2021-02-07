@@ -2,10 +2,10 @@
 django-linear-migrations
 ========================
 
-.. image:: https://img.shields.io/github/workflow/status/adamchainz/django-linear-migrations/CI/master?style=for-the-badge
+.. image:: https://img.shields.io/github/workflow/status/adamchainz/django-linear-migrations/CI/main?style=for-the-badge
    :target: https://github.com/adamchainz/django-linear-migrations/actions?workflow=CI
 
-.. image:: https://img.shields.io/codecov/c/github/adamchainz/django-linear-migrations/master?style=for-the-badge
+.. image:: https://img.shields.io/codecov/c/github/adamchainz/django-linear-migrations/main?style=for-the-badge
    :target: https://app.codecov.io/gh/adamchainz/django-linear-migrations
 
 .. image:: https://img.shields.io/pypi/v/django-linear-migrations.svg?style=for-the-badge
