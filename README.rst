@@ -195,7 +195,7 @@ It's at this point you can use ``rebase-migration`` to automatically fix the ``b
 
 .. code-block:: console
 
-    $ python manage.py rebease-migration books
+    $ python manage.py rebase-migration books
     Renamed 0002_longer_titles.py to 0003_longer_titles.py, updated its dependencies, and updated max_migration.txt.
 
 This places the conflicted migration on the end of the migration history.
