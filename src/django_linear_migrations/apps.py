@@ -114,7 +114,7 @@ def check_max_migration_files(*, app_configs=None, **kwargs):
                     hint=(
                         "This may be the result of a git merge. Fix the file"
                         + " to contain only the name of the latest migration,"
-                        + " or maybe use the 'rebase-migartion' command."
+                        + " or maybe use the 'rebase-migration' command."
                     ),
                 )
             )
