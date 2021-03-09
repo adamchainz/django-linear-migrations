@@ -2,6 +2,9 @@
 History
 =======
 
+1.5.1 (2021-03-09)
+------------------
+
 * Fix ``rebase-migration`` to handle swappable dependencies and other dynamic
   constructs in the ``dependencies`` list.
 
