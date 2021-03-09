@@ -9,6 +9,12 @@ from django.db import DatabaseError, connections
 from django.db.migrations.recorder import MigrationRecorder
 
 from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
+from django_linear_migrations.compat import (
+    ast_unparse,
+    get_ast_constant_str_value,
+    is_ast_constant_str,
+    make_ast_constant_str,
+)
 
 
 class Command(BaseCommand):
@@ -92,27 +98,50 @@ class Command(BaseCommand):
         before_deps, deps, after_deps = split_result
 
         try:
-            dependencies = ast.literal_eval(deps)
+            dependencies_module = ast.parse(deps)
         except SyntaxError:
             raise CommandError(
                 f"Encountered a SyntaxError trying to parse 'dependencies = {deps}'."
             )
 
-        num_this_app_dependencies = len([d for d in dependencies if d[0] == app_label])
+        dependencies = dependencies_module.body[0].value
+
+        new_dependencies = ast.List(elts=[])
+        num_this_app_dependencies = 0
+        for dependency in dependencies.elts:
+            # Skip swappable_dependency calls, other dynamically defined
+            # dependencies, and bad definitions
+            if (
+                not isinstance(dependency, (ast.Tuple, ast.List))
+                or len(dependency.elts) != 2
+                or not all(is_ast_constant_str(el) for el in dependency.elts)
+            ):
+                new_dependencies.elts.append(dependency)
+                continue
+
+            dependency_app_label = get_ast_constant_str_value(dependency.elts[0])
+
+            if dependency_app_label == app_label:
+                num_this_app_dependencies += 1
+                new_dependencies.elts.append(
+                    ast.Tuple(
+                        elts=[
+                            make_ast_constant_str(app_label),
+                            make_ast_constant_str(merged_migration_name),
+                        ]
+                    )
+                )
+            else:
+                new_dependencies.elts.append(dependency)
+
         if num_this_app_dependencies != 1:
             raise CommandError(
-                f"Cannot edit {rebased_migration_filename!r} since it has two"
-                + f" dependencies within {app_label}."
+                f"Cannot edit {rebased_migration_filename!r} since it has "
+                + f"{num_this_app_dependencies} dependencies within "
+                + f"{app_label}."
             )
 
-        new_dependencies = []
-        for dependency_app_label, migration_name in dependencies:
-            if dependency_app_label == app_label:
-                new_dependencies.append((app_label, merged_migration_name))
-            else:
-                new_dependencies.append((dependency_app_label, migration_name))
-
-        new_content = before_deps + repr(new_dependencies) + after_deps
+        new_content = before_deps + ast_unparse(new_dependencies) + after_deps
 
         merged_number, _merged_rest = merged_migration_name.split("_", 1)
         _rebased_number, rebased_rest = rebased_migration_name.split("_", 1)

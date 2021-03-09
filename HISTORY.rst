@@ -2,6 +2,12 @@
 History
 =======
 
+* Fix ``rebase-migration`` to handle swappable dependencies and other dynamic
+  constructs in the ``dependencies`` list.
+
+  Thanks to James Singleton for the report in `Issue #52
+  <https://github.com/adamchainz/django-linear-migrations/issues/52>`__.
+
 1.5.0 (2021-01-25)
 ------------------
 

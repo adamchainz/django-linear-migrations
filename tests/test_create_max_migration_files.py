@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 
 
-class MakeMigrationsTests(TestCase):
+class CreateMaxMigrationFilesTests(TestCase):
     @pytest.fixture(autouse=True)
     def tmp_path_fixture(self, tmp_path):
         migrations_module_name = "migrations" + str(time.time()).replace(".", "")
