@@ -14,6 +14,31 @@ else:
         return getattr(module, "__file__", None) is None
 
 
+if sys.version_info >= (3, 8):
+    # Bridge the change from ast.Str to ast.Constant
+
+    def is_ast_constant_str(node):
+        return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+    def get_ast_constant_str_value(node):
+        return node.value
+
+    def make_ast_constant_str(value):
+        return ast.Constant(value=value, kind=None)
+
+
+else:
+
+    def is_ast_constant_str(node):
+        return isinstance(node, ast.Str)
+
+    def get_ast_constant_str_value(node):
+        return node.s
+
+    def make_ast_constant_str(value):
+        return ast.Str(s=value)
+
+
 if sys.version_info >= (3, 9):
     ast_unparse = ast.unparse
 else:
@@ -409,6 +434,11 @@ else:
             else:
                 self.write(repr(value))
 
+        # From Python 3.7:
+        def _Str(self, tree):
+            self.write(repr(tree.s))
+
+        # From Python 3.8:
         def _Constant(self, t):
             value = t.value
             if isinstance(value, tuple):

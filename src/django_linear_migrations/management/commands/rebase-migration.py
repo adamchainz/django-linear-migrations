@@ -9,7 +9,12 @@ from django.db import DatabaseError, connections
 from django.db.migrations.recorder import MigrationRecorder
 
 from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
-from django_linear_migrations.compat import ast_unparse
+from django_linear_migrations.compat import (
+    ast_unparse,
+    get_ast_constant_str_value,
+    is_ast_constant_str,
+    make_ast_constant_str,
+)
 
 
 class Command(BaseCommand):
@@ -109,20 +114,20 @@ class Command(BaseCommand):
             if (
                 not isinstance(dependency, (ast.Tuple, ast.List))
                 or len(dependency.elts) != 2
-                or not all(isinstance(el, ast.Constant) for el in dependency.elts)
+                or not all(is_ast_constant_str(el) for el in dependency.elts)
             ):
                 new_dependencies.elts.append(dependency)
                 continue
 
-            dependency_app_label = dependency.elts[0].value
+            dependency_app_label = get_ast_constant_str_value(dependency.elts[0])
 
             if dependency_app_label == app_label:
                 num_this_app_dependencies += 1
                 new_dependencies.elts.append(
                     ast.Tuple(
                         elts=[
-                            ast.Constant(value=app_label, kind=None),
-                            ast.Constant(value=merged_migration_name, kind=None),
+                            make_ast_constant_str(app_label),
+                            make_ast_constant_str(merged_migration_name),
                         ]
                     )
                 )
