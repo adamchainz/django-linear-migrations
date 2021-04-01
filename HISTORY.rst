@@ -6,6 +6,11 @@ History
   run outside of the tox setup in the repository. Repackagers can use GitHub's
   tarballs per tag.
 
+1.5.2 (unreleased)
+------------------
+
+* Improve detection of first party apps.
+
 1.5.1 (2021-03-09)
 ------------------
 

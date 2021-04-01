@@ -21,7 +21,7 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
 
 def is_first_party_app_config(app_config):
     if settings.is_overridden("FIRST_PARTY_APPS"):
-        return app_config.label in settings.FIRST_PARTY_APPS
+        return app_config.name in settings.FIRST_PARTY_APPS
 
     # Check if it seems to be installed in a virtualenv
     path = Path(app_config.path)
