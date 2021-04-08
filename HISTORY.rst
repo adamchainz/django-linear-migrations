@@ -2,6 +2,9 @@
 History
 =======
 
+1.6.0 (2021-04-08)
+------------------
+
 * Make ``FIRST_PARTY_APPS`` handling match the behaviour of ``INSTALLED_APPS``.
 
   Thanks to Martin Bächtold for the report in `Pull Request #62
