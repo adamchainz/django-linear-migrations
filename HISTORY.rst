@@ -2,6 +2,11 @@
 History
 =======
 
+* Make ``FIRST_PARTY_APPS`` handling match the behaviour of ``INSTALLED_APPS``.
+
+  Thanks to Martin Bächtold for the report in `Pull Request #62
+  <https://github.com/adamchainz/django-linear-migrations/pull/62>`__.
+
 * Stop distributing tests to reduce package size. Tests are not intended to be
   run outside of the tox setup in the repository. Repackagers can use GitHub's
   tarballs per tag.
