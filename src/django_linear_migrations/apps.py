@@ -1,11 +1,14 @@
 import pkgutil
+from functools import lru_cache
 from importlib import import_module, reload
 from pathlib import Path
 
 from django.apps import AppConfig, apps
 from django.conf import settings
 from django.core.checks import Error, Tags, register
+from django.core.signals import setting_changed
 from django.db.migrations.loader import MigrationLoader
+from django.dispatch import receiver
 from django.utils.functional import cached_property
 
 from django_linear_migrations.compat import is_namespace_module
@@ -19,9 +22,23 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
         register(Tags.models)(check_max_migration_files)
 
 
+@lru_cache(maxsize=1)
+def get_first_party_app_labels():
+    if not settings.is_overridden("FIRST_PARTY_APPS"):
+        return None
+    return {AppConfig.create(name).label for name in settings.FIRST_PARTY_APPS}
+
+
+@receiver(setting_changed)
+def reset_first_party_app_labels(*, setting, **kwargs):
+    if setting == "FIRST_PARTY_APPS":
+        get_first_party_app_labels.cache_clear()
+
+
 def is_first_party_app_config(app_config):
-    if settings.is_overridden("FIRST_PARTY_APPS"):
-        return app_config.label in settings.FIRST_PARTY_APPS
+    first_party_labels = get_first_party_app_labels()
+    if first_party_labels is not None:
+        return app_config.label in first_party_labels
 
     # Check if it seems to be installed in a virtualenv
     path = Path(app_config.path)
