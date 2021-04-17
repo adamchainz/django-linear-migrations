@@ -224,5 +224,5 @@ Inspiration
 
 I’ve seen similar techniques to the one implemented by django-linear-migrations at several places, and they acted as the inspiration for putting this package together.
 My previous client `Pollen <https://pollen.co/>`__ and current client `ev.energy <https://ev.energy/>`__ both have implementations.
-This `Doordash blogpost <https://medium.com/@DoorDash/tips-for-building-high-quality-django-apps-at-scale-a5a25917b2b5>`__ covers a similar system that uses a single file for tracking latest migrations.
+This `Doordash blogpost <https://doordash.engineering/2017/05/15/tips-for-building-high-quality-django-apps-at-scale/>`__ covers a similar system that uses a single file for tracking latest migrations.
 And there's also a package called `django-migrations-git-conflicts <https://pypi.org/project/django-migrations-git-conflicts/>`__ which works fairly similarly.
