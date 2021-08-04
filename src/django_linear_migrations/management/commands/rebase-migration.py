@@ -68,7 +68,7 @@ class Command(BaseCommand):
                 + " migration does not exist."
             )
 
-        rebased_migration_filename = "{}.py".format(rebased_migration_name)
+        rebased_migration_filename = f"{rebased_migration_name}.py"
         rebased_migration_path = migration_details.dir / rebased_migration_filename
         if not rebased_migration_path.exists():
             raise CommandError(

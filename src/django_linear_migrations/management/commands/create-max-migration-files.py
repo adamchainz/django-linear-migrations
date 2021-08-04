@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     max_migration_name = max(migration_details.names)
                     max_migration_txt.write_text(max_migration_name + "\n")
                     self.stdout.write(
-                        "Created max_migration.txt for {}.".format(app_config.label)
+                        f"Created max_migration.txt for {app_config.label}."
                     )
                 else:
                     self.stdout.write(
