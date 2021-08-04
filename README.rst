@@ -50,9 +50,9 @@ Installation
 .. code-block:: python
 
     INSTALLED_APPS = [
-        ...
+        ...,
         "django_linear_migrations",
-        ...
+        ...,
     ]
 
 The app relies on overriding the built-in ``makemigrations`` command.
@@ -83,14 +83,9 @@ If you see any apps listed that *aren’t* part of your project, define the list
 
 .. code-block:: python
 
-    FIRST_PARTY_APPS = [
+    FIRST_PARTY_APPS = []
 
-    ]
-
-    INSTALLED_APPS = FIRST_PARTY_APPS + [
-        "django_linear_migrations",
-        ...
-    ]
+    INSTALLED_APPS = FIRST_PARTY_APPS + ["django_linear_migrations", ...]
 
 (Note: Django recommends you always list first-party apps first in your project so they can override things in third-party and contrib apps.)
 
