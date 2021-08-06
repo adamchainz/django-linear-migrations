@@ -1,10 +1,7 @@
 import sys
 import time
-from importlib import import_module
 from io import StringIO
 from textwrap import dedent
-from types import ModuleType
-from typing import List, Optional, Tuple, cast
 from unittest import mock
 
 import pytest
@@ -13,23 +10,7 @@ from django.db import connection
 from django.db.migrations.recorder import MigrationRecorder
 from django.test import SimpleTestCase, TestCase, override_settings
 
-
-# Unsurprisingly Mypy can't follow our dynamic import so need to tell it about
-# the types there
-class RebaseMigrationModule(ModuleType):
-    def find_migration_names(
-        self, max_migration_lines: List[str]
-    ) -> Optional[Tuple[str, str]]:
-        ...
-
-    def migration_applied(self, app_label: str, migration_name: str) -> bool:
-        ...
-
-
-module = cast(
-    RebaseMigrationModule,
-    import_module("django_linear_migrations.management.commands.rebase-migration"),
-)
+from django_linear_migrations.management.commands import rebase_migration as module
 
 
 class RebaseMigrationsTests(TestCase):
@@ -52,7 +33,7 @@ class RebaseMigrationsTests(TestCase):
         err = StringIO()
         returncode = 0
         try:
-            call_command("rebase-migration", *args, stdout=out, stderr=err, **kwargs)
+            call_command("rebase_migration", *args, stdout=out, stderr=err, **kwargs)
         except SystemExit as exc:
             returncode = exc.code
         return out.getvalue(), err.getvalue(), returncode

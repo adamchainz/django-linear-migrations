@@ -129,7 +129,7 @@ def check_max_migration_files(
                     msg=f"{app_label}'s max_migration.txt does not exist.",
                     hint=(
                         "If you just installed django-linear-migrations, run"
-                        + " 'python manage.py create-max-migration-files'."
+                        + " 'python manage.py create_max_migration_files'."
                         + " Otherwise, check how it has gone missing."
                     ),
                 )

@@ -74,7 +74,7 @@ Run this command:
 
 .. code-block:: sh
 
-    python manage.py create-max-migration-files --dry-run
+    python manage.py create_max_migration_files --dry-run
 
 This command is for creating ``max_migration.txt`` files (more on which later) - in dry run mode it lists the apps it would make such files for.
 It tries to automatically detect which apps are first-party, i.e. belong to your project.
@@ -93,14 +93,14 @@ If you see any apps listed that *aren’t* part of your project, define the list
 
 .. code-block:: sh
 
-    python manage.py create-max-migration-files
+    python manage.py create_max_migration_files
 
 In the future, when you add a new app to your project, you’ll need to create its ``max_migration.txt`` file.
 Add the new app to ``INSTALLED_APPS`` or ``FIRST_PARTY_APPS`` as appropriate, then rerun the creation command for the new app by specifying its label:
 
 .. code-block:: sh
 
-    python manage.py create-max-migration-files my_new_app
+    python manage.py create_max_migration_files my_new_app
 
 Usage
 =====
@@ -110,7 +110,7 @@ It enforces that your apps have a *linear* migration history, avoiding merge mig
 It does this by making ``makemigrations`` record the name of the latest migration in per-app ``max_migration.txt`` files.
 These files will then cause a merge conflicts in your source control tool (Git, Mercurial, etc.) in the case of migrations being developed in parallel.
 The first merged migration for an app will prevent the second from being merged, without addressing the conflict.
-The included ``rebase-migration`` command can help automatically such conflicts.
+The included ``rebase_migration`` command can help automatically such conflicts.
 
 System Checks
 -------------
@@ -123,12 +123,12 @@ These are:
 * ``dlm.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dlm.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
 
-``create-max-migration-files`` command
+``create_max_migration_files`` command
 --------------------------------------
 
 .. code-block:: sh
 
-    python manage.py create-max-migration-files [app_label [app_label ...]]
+    python manage.py create_max_migration_files [app_label [app_label ...]]
 
 This management command creates ``max_migration.txt`` files for all first party apps, or the given labels.
 It’s used in initial installation of django-linear-migrations, and for recreating.
@@ -138,7 +138,7 @@ Pass the ``--dry-run`` flag to only list the ``max_migration.txt`` files that wo
 Pass the ``--recreate`` flag to re-create files that already exist.
 This may be useful after altering migrations with merges or manually.
 
-``rebase-migration`` command
+``rebase_migration`` command
 ----------------------------
 
 This management command can help you fix migration conflicts.
@@ -146,7 +146,7 @@ Following a conflicted “rebase” operation in your source control tool, run i
 
 .. code-block:: console
 
-    $ python manage.py rebase-migration <app_label>
+    $ python manage.py rebase_migration <app_label>
 
 Note rebasing the migration might not always be the *correct* thing to do.
 If the migrations in main and feature branches have both affected the same models, rebasing the migration on the end may not make sense.
@@ -201,11 +201,11 @@ If you look at the contents of the ``books`` app's ``max_migration.txt`` at this
     0002_longer_titles
     >>>>>>> 123456789 (Increase Book title length)
 
-It's at this point you can use ``rebase-migration`` to automatically fix the ``books`` migration history:
+It's at this point you can use ``rebase_migration`` to automatically fix the ``books`` migration history:
 
 .. code-block:: console
 
-    $ python manage.py rebase-migration books
+    $ python manage.py rebase_migration books
     Renamed 0002_longer_titles.py to 0003_longer_titles.py, updated its dependencies, and updated max_migration.txt.
 
 This places the conflicted migration on the end of the migration history.
