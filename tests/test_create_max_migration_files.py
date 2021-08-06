@@ -28,7 +28,7 @@ class CreateMaxMigrationFilesTests(TestCase):
         returncode = 0
         try:
             call_command(
-                "create-max-migration-files", *args, stdout=out, stderr=err, **kwargs
+                "create_max_migration_files", *args, stdout=out, stderr=err, **kwargs
             )
         except SystemExit as exc:
             returncode = exc.code

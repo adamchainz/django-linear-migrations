@@ -2,7 +2,14 @@
 History
 =======
 
-* Added ``--recreate`` flag to ``create-max-migration-files``.
+* Renamed commands from using hypens to underscores.
+  This makes them importable and therefore extensible.
+  The new names are:
+
+  * ``create-max-migration-files`` -> ``create_max_migration_files``
+  * ``rebase-migration`` -> ``rebase_migration``
+
+* Added ``--recreate`` flag to ``create_max_migration_files``.
 
   Thanks to Gordon Wrigley for the feature request in `Issue #79
   <https://github.com/adamchainz/django-linear-migrations/issues/79>`__.
