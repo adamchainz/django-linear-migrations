@@ -1,4 +1,6 @@
+import argparse
 import sys
+from typing import List, Union
 
 import django
 from django.apps import apps
@@ -12,12 +14,13 @@ class Command(BaseCommand):
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
+    requires_system_checks: Union[bool, List[str]]
     if django.VERSION < (3, 2):
         requires_system_checks = False
     else:
         requires_system_checks = []
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "args",
             metavar="app_label",
@@ -40,11 +43,13 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(self, *app_labels, dry_run, recreate, **options):
+    def handle(
+        self, *app_labels: str, dry_run: bool, recreate: bool, **options: object
+    ) -> None:
         # Copied check from makemigrations
-        app_labels = set(app_labels)
+        labels = set(app_labels)
         has_bad_labels = False
-        for app_label in app_labels:
+        for app_label in labels:
             try:
                 apps.get_app_config(app_label)
             except LookupError as err:
@@ -55,7 +60,7 @@ class Command(BaseCommand):
 
         any_created = False
         for app_config in first_party_app_configs():
-            if app_labels and app_config.label not in app_labels:
+            if labels and app_config.label not in labels:
                 continue
 
             migration_details = MigrationDetails(app_config.label)

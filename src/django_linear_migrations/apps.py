@@ -2,6 +2,8 @@ import pkgutil
 from functools import lru_cache
 from importlib import import_module, reload
 from pathlib import Path
+from types import ModuleType
+from typing import Generator, List, Optional, Set
 
 from django.apps import AppConfig, apps
 from django.conf import settings
@@ -18,24 +20,24 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
     name = "django_linear_migrations"
     verbose_name = "django-linear-migrations"
 
-    def ready(self):
+    def ready(self) -> None:
         register(Tags.models)(check_max_migration_files)
 
 
 @lru_cache(maxsize=1)
-def get_first_party_app_labels():
+def get_first_party_app_labels() -> Optional[Set[str]]:
     if not settings.is_overridden("FIRST_PARTY_APPS"):
         return None
     return {AppConfig.create(name).label for name in settings.FIRST_PARTY_APPS}
 
 
 @receiver(setting_changed)
-def reset_first_party_app_labels(*, setting, **kwargs):
+def reset_first_party_app_labels(*, setting: str, **kwargs: object) -> None:
     if setting == "FIRST_PARTY_APPS":
         get_first_party_app_labels.cache_clear()
 
 
-def is_first_party_app_config(app_config):
+def is_first_party_app_config(app_config: AppConfig) -> bool:
     first_party_labels = get_first_party_app_labels()
     if first_party_labels is not None:
         return app_config.label in first_party_labels
@@ -45,14 +47,17 @@ def is_first_party_app_config(app_config):
     return "site-packages" not in path.parts and "dist-packages" not in path.parts
 
 
-def first_party_app_configs():
+def first_party_app_configs() -> Generator[AppConfig, None, None]:
     for app_config in apps.get_app_configs():
         if is_first_party_app_config(app_config):
             yield app_config
 
 
 class MigrationDetails:
-    def __init__(self, app_label, do_reload=False):
+    migrations_module_name: Optional[str]
+    migrations_module: Optional[ModuleType]
+
+    def __init__(self, app_label: str, do_reload: bool = False) -> None:
         self.app_label = app_label
 
         # Some logic duplicated from MigrationLoader.load_disk, but avoiding
@@ -73,7 +78,7 @@ class MigrationDetails:
                     reload(self.migrations_module)
 
     @property
-    def has_migrations(self):
+    def has_migrations(self) -> bool:
         return (
             self.migrations_module is not None
             and not is_namespace_module(self.migrations_module)
@@ -83,19 +88,28 @@ class MigrationDetails:
         )
 
     @cached_property
-    def dir(self):
+    def dir(self) -> Path:
+        assert self.migrations_module is not None
         return Path(self.migrations_module.__file__).parent
 
     @cached_property
-    def names(self):
+    def names(self) -> Set[str]:
+        assert self.migrations_module is not None
+
+        # ModuleType.__path__ supported in future mypy
+        # https://github.com/python/mypy/issues/1422
+        path = self.migrations_module.__path__  # type: ignore[attr-defined]
+
         return {
             name
-            for _, name, is_pkg in pkgutil.iter_modules(self.migrations_module.__path__)
+            for _, name, is_pkg in pkgutil.iter_modules(path)
             if not is_pkg and name[0] not in "_~"
         }
 
 
-def check_max_migration_files(*, app_configs=None, **kwargs):
+def check_max_migration_files(
+    *, app_configs: Optional[Set[AppConfig]] = None, **kwargs: object
+) -> List[Error]:
     errors = []
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others

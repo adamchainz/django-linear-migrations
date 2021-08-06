@@ -1,41 +1,46 @@
 import ast
 import io
 import sys
+from types import ModuleType
 
 if sys.version_info >= (3, 7):
 
-    def is_namespace_module(module):
+    def is_namespace_module(module: ModuleType) -> bool:
         return module.__file__ is None
 
 
 else:
 
-    def is_namespace_module(module):
+    def is_namespace_module(module: ModuleType) -> bool:
         return getattr(module, "__file__", None) is None
 
 
 if sys.version_info >= (3, 8):
     # Bridge the change from ast.Str to ast.Constant
 
-    def is_ast_constant_str(node):
+    ast_constant_type = ast.Constant
+
+    def is_ast_constant_str(node: ast.AST) -> bool:
         return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
-    def get_ast_constant_str_value(node):
+    def get_ast_constant_str_value(node: ast.Constant) -> str:
         return node.value
 
-    def make_ast_constant_str(value):
+    def make_ast_constant_str(value: str) -> ast.Constant:
         return ast.Constant(value=value, kind=None)
 
 
 else:
 
-    def is_ast_constant_str(node):
+    ast_constant_type = ast.Str
+
+    def is_ast_constant_str(node: ast.AST) -> bool:
         return isinstance(node, ast.Str)
 
-    def get_ast_constant_str_value(node):
+    def get_ast_constant_str_value(node: ast.Str) -> str:
         return node.s
 
-    def make_ast_constant_str(value):
+    def make_ast_constant_str(value: str) -> ast.Str:
         return ast.Str(s=value)
 
 
@@ -43,14 +48,14 @@ if sys.version_info >= (3, 9):
     ast_unparse = ast.unparse
 else:
 
-    def ast_unparse(ast_obj):
+    def ast_unparse(ast_obj: ast.AST) -> str:
         out = io.StringIO()
         Unparser(ast_obj, out)
         return out.getvalue().strip()
 
     # Copied from
     # https://github.com/python/cpython/blob/3.8/Tools/parser/unparse.py
-    # Which got adapted into ast.unpase in Python 3.9
+    # Which got adapted into ast.unparse in Python 3.9
 
     # Large float and imaginary literals get turned into infinities in the AST.
     # We unparse those infinities to INFSTR.
