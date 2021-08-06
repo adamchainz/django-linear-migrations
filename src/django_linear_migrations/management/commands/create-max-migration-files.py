@@ -8,10 +8,7 @@ from django_linear_migrations.apps import MigrationDetails, first_party_app_conf
 
 
 class Command(BaseCommand):
-    help = (
-        "Generate max_migration.txt files for first-party apps that don't"
-        + " have one."
-    )
+    help = "Generate max_migration.txt files for first-party apps."
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
@@ -33,8 +30,17 @@ class Command(BaseCommand):
             default=False,
             help="Actually create the files.",
         )
+        parser.add_argument(
+            "--recreate",
+            action="store_true",
+            default=False,
+            help=(
+                "Recreate existing files. By default only non-existing files"
+                + " will be created."
+            ),
+        )
 
-    def handle(self, *app_labels, dry_run, **options):
+    def handle(self, *app_labels, dry_run, recreate, **options):
         # Copied check from makemigrations
         app_labels = set(app_labels)
         has_bad_labels = False
@@ -57,7 +63,7 @@ class Command(BaseCommand):
                 continue
 
             max_migration_txt = migration_details.dir / "max_migration.txt"
-            if not max_migration_txt.exists():
+            if recreate or not max_migration_txt.exists():
                 if not dry_run:
                     max_migration_name = max(migration_details.names)
                     max_migration_txt.write_text(max_migration_name + "\n")
