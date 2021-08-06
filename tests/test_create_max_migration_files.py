@@ -114,6 +114,28 @@ class CreateMaxMigrationFilesTests(TestCase):
         assert err == ""
         assert returncode == 0
 
+    def test_success_recreate(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
+
+        out, err, returncode = self.call_command("--recreate")
+
+        assert out == "Created max_migration.txt for testapp.\n"
+        assert err == ""
+        assert returncode == 0
+
+    def test_success_recreate_dry_run(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
+
+        out, err, returncode = self.call_command("--recreate", "--dry-run")
+
+        assert out == "Would create max_migration.txt for testapp.\n"
+        assert err == ""
+        assert returncode == 0
+
     def test_success_specific_app_label(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").touch()

@@ -96,7 +96,7 @@ If you see any apps listed that *aren’t* part of your project, define the list
     python manage.py create-max-migration-files
 
 In the future, when you add a new app to your project, you’ll need to create its ``max_migration.txt`` file.
-If you defined ``FIRST_PARTY_APPS``, add it there, then rerun the creation command for the new app by specifying its label:
+Add the new app to ``INSTALLED_APPS`` or ``FIRST_PARTY_APPS`` as appropriate, then rerun the creation command for the new app by specifying its label:
 
 .. code-block:: sh
 
@@ -122,6 +122,21 @@ These are:
 * ``dlm.E002``: ``<app_label>``'s max_migration.txt contains multiple lines.
 * ``dlm.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dlm.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
+
+``create-max-migration-files`` command
+--------------------------------------
+
+.. code-block:: sh
+
+    python manage.py create-max-migration-files [app_label [app_label ...]]
+
+This management command creates ``max_migration.txt`` files for all first party apps, or the given labels.
+It’s used in initial installation of django-linear-migrations, and for recreating.
+
+Pass the ``--dry-run`` flag to only list the ``max_migration.txt`` files that would be created.
+
+Pass the ``--recreate`` flag to re-create files that already exist.
+This may be useful after altering migrations with merges or manually.
 
 ``rebase-migration`` command
 ----------------------------

@@ -2,6 +2,11 @@
 History
 =======
 
+* Added ``--recreate`` flag to ``create-max-migration-files``.
+
+  Thanks to Gordon Wrigley for the feature request in `Issue #79
+  <https://github.com/adamchainz/django-linear-migrations/issues/79>`__.
+
 1.6.0 (2021-04-08)
 ------------------
 
