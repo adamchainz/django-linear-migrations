@@ -45,7 +45,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
     def test_skipped_unspecified_app(self):
         (self.migrations_dir / "__init__.py").touch()
 
-        result = check_max_migration_files(app_configs=[])
+        result = check_max_migration_files(app_configs=set())
 
         assert result == []
 

@@ -1,41 +1,47 @@
 import ast
 import io
 import sys
+from types import ModuleType
+from typing import no_type_check
 
 if sys.version_info >= (3, 7):
 
-    def is_namespace_module(module):
+    def is_namespace_module(module: ModuleType) -> bool:
         return module.__file__ is None
 
 
 else:
 
-    def is_namespace_module(module):
+    def is_namespace_module(module: ModuleType) -> bool:
         return getattr(module, "__file__", None) is None
 
 
 if sys.version_info >= (3, 8):
     # Bridge the change from ast.Str to ast.Constant
 
-    def is_ast_constant_str(node):
+    ast_constant_type = ast.Constant
+
+    def is_ast_constant_str(node: ast.AST) -> bool:
         return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
-    def get_ast_constant_str_value(node):
+    def get_ast_constant_str_value(node: ast.Constant) -> str:
         return node.value
 
-    def make_ast_constant_str(value):
+    def make_ast_constant_str(value: str) -> ast.Constant:
         return ast.Constant(value=value, kind=None)
 
 
 else:
 
-    def is_ast_constant_str(node):
+    ast_constant_type = ast.Str
+
+    def is_ast_constant_str(node: ast.AST) -> bool:
         return isinstance(node, ast.Str)
 
-    def get_ast_constant_str_value(node):
+    def get_ast_constant_str_value(node: ast.Str) -> str:
         return node.s
 
-    def make_ast_constant_str(value):
+    def make_ast_constant_str(value: str) -> ast.Str:
         return ast.Str(s=value)
 
 
@@ -43,19 +49,20 @@ if sys.version_info >= (3, 9):
     ast_unparse = ast.unparse
 else:
 
-    def ast_unparse(ast_obj):
+    def ast_unparse(ast_obj: ast.AST) -> str:
         out = io.StringIO()
         Unparser(ast_obj, out)
         return out.getvalue().strip()
 
     # Copied from
     # https://github.com/python/cpython/blob/3.8/Tools/parser/unparse.py
-    # Which got adapted into ast.unpase in Python 3.9
+    # Which got adapted into ast.unparse in Python 3.9
 
     # Large float and imaginary literals get turned into infinities in the AST.
     # We unparse those infinities to INFSTR.
     INFSTR = "1e" + repr(sys.float_info.max_10_exp + 1)
 
+    @no_type_check
     def interleave(inter, f, seq):  # pragma: no cover
         """Call f on each item in seq, calling inter() in between."""
         seq = iter(seq)
@@ -73,6 +80,7 @@ else:
         output source code for the abstract syntax; original formatting
         is disregarded."""
 
+        @no_type_check
         def __init__(self, tree, file=sys.stdout):
             """Unparser(tree, file=sys.stdout) -> None.
             Print the source for tree to file."""
@@ -82,23 +90,28 @@ else:
             print("", file=self.f)
             self.f.flush()
 
+        @no_type_check
         def fill(self, text=""):
             "Indent a piece of text, according to the current indentation level"
             self.f.write("\n" + "    " * self._indent + text)
 
+        @no_type_check
         def write(self, text):
             "Append a piece of text to the current line."
             self.f.write(text)
 
+        @no_type_check
         def enter(self):
             "Print ':', and increase the indentation."
             self.write(":")
             self._indent += 1
 
+        @no_type_check
         def leave(self):
             "Decrease the indentation level."
             self._indent -= 1
 
+        @no_type_check
         def dispatch(self, tree):
             "Dispatcher function, dispatching tree type T to method _T."
             if isinstance(tree, list):
@@ -115,15 +128,18 @@ else:
         # currently doesn't.                                   #
         # #######################################################
 
+        @no_type_check
         def _Module(self, tree):
             for stmt in tree.body:
                 self.dispatch(stmt)
 
         # stmt
+        @no_type_check
         def _Expr(self, tree):
             self.fill()
             self.dispatch(tree.value)
 
+        @no_type_check
         def _NamedExpr(self, tree):
             self.write("(")
             self.dispatch(tree.target)
@@ -131,10 +147,12 @@ else:
             self.dispatch(tree.value)
             self.write(")")
 
+        @no_type_check
         def _Import(self, t):
             self.fill("import ")
             interleave(lambda: self.write(", "), self.dispatch, t.names)
 
+        @no_type_check
         def _ImportFrom(self, t):
             self.fill("from ")
             self.write("." * t.level)
@@ -143,6 +161,7 @@ else:
             self.write(" import ")
             interleave(lambda: self.write(", "), self.dispatch, t.names)
 
+        @no_type_check
         def _Assign(self, t):
             self.fill()
             for target in t.targets:
@@ -150,12 +169,14 @@ else:
                 self.write(" = ")
             self.dispatch(t.value)
 
+        @no_type_check
         def _AugAssign(self, t):
             self.fill()
             self.dispatch(t.target)
             self.write(" " + self.binop[t.op.__class__.__name__] + "= ")
             self.dispatch(t.value)
 
+        @no_type_check
         def _AnnAssign(self, t):
             self.fill()
             if not t.simple and isinstance(t.target, ast.Name):
@@ -169,25 +190,31 @@ else:
                 self.write(" = ")
                 self.dispatch(t.value)
 
+        @no_type_check
         def _Return(self, t):
             self.fill("return")
             if t.value:
                 self.write(" ")
                 self.dispatch(t.value)
 
+        @no_type_check
         def _Pass(self, t):
             self.fill("pass")
 
+        @no_type_check
         def _Break(self, t):
             self.fill("break")
 
+        @no_type_check
         def _Continue(self, t):
             self.fill("continue")
 
+        @no_type_check
         def _Delete(self, t):
             self.fill("del ")
             interleave(lambda: self.write(", "), self.dispatch, t.targets)
 
+        @no_type_check
         def _Assert(self, t):
             self.fill("assert ")
             self.dispatch(t.test)
@@ -195,14 +222,17 @@ else:
                 self.write(", ")
                 self.dispatch(t.msg)
 
+        @no_type_check
         def _Global(self, t):
             self.fill("global ")
             interleave(lambda: self.write(", "), self.write, t.names)
 
+        @no_type_check
         def _Nonlocal(self, t):
             self.fill("nonlocal ")
             interleave(lambda: self.write(", "), self.write, t.names)
 
+        @no_type_check
         def _Await(self, t):
             self.write("(")
             self.write("await")
@@ -211,6 +241,7 @@ else:
                 self.dispatch(t.value)
             self.write(")")
 
+        @no_type_check
         def _Yield(self, t):
             self.write("(")
             self.write("yield")
@@ -219,6 +250,7 @@ else:
                 self.dispatch(t.value)
             self.write(")")
 
+        @no_type_check
         def _YieldFrom(self, t):
             self.write("(")
             self.write("yield from")
@@ -227,6 +259,7 @@ else:
                 self.dispatch(t.value)
             self.write(")")
 
+        @no_type_check
         def _Raise(self, t):
             self.fill("raise")
             if not t.exc:
@@ -238,6 +271,7 @@ else:
                 self.write(" from ")
                 self.dispatch(t.cause)
 
+        @no_type_check
         def _Try(self, t):
             self.fill("try")
             self.enter()
@@ -256,6 +290,7 @@ else:
                 self.dispatch(t.finalbody)
                 self.leave()
 
+        @no_type_check
         def _ExceptHandler(self, t):
             self.fill("except")
             if t.type:
@@ -268,6 +303,7 @@ else:
             self.dispatch(t.body)
             self.leave()
 
+        @no_type_check
         def _ClassDef(self, t):
             self.write("\n")
             for deco in t.decorator_list:
@@ -294,12 +330,15 @@ else:
             self.dispatch(t.body)
             self.leave()
 
+        @no_type_check
         def _FunctionDef(self, t):
             self.__FunctionDef_helper(t, "def")
 
+        @no_type_check
         def _AsyncFunctionDef(self, t):
             self.__FunctionDef_helper(t, "async def")
 
+        @no_type_check
         def __FunctionDef_helper(self, t, fill_suffix):
             self.write("\n")
             for deco in t.decorator_list:
@@ -316,12 +355,15 @@ else:
             self.dispatch(t.body)
             self.leave()
 
+        @no_type_check
         def _For(self, t):
             self.__For_helper("for ", t)
 
+        @no_type_check
         def _AsyncFor(self, t):
             self.__For_helper("async for ", t)
 
+        @no_type_check
         def __For_helper(self, fill, t):
             self.fill(fill)
             self.dispatch(t.target)
@@ -336,6 +378,7 @@ else:
                 self.dispatch(t.orelse)
                 self.leave()
 
+        @no_type_check
         def _If(self, t):
             self.fill("if ")
             self.dispatch(t.test)
@@ -357,6 +400,7 @@ else:
                 self.dispatch(t.orelse)
                 self.leave()
 
+        @no_type_check
         def _While(self, t):
             self.fill("while ")
             self.dispatch(t.test)
@@ -369,6 +413,7 @@ else:
                 self.dispatch(t.orelse)
                 self.leave()
 
+        @no_type_check
         def _With(self, t):
             self.fill("with ")
             interleave(lambda: self.write(", "), self.dispatch, t.items)
@@ -376,6 +421,7 @@ else:
             self.dispatch(t.body)
             self.leave()
 
+        @no_type_check
         def _AsyncWith(self, t):
             self.fill("async with ")
             interleave(lambda: self.write(", "), self.dispatch, t.items)
@@ -384,28 +430,33 @@ else:
             self.leave()
 
         # expr
+        @no_type_check
         def _JoinedStr(self, t):
             self.write("f")
             string = io.StringIO()
             self._fstring_JoinedStr(t, string.write)
             self.write(repr(string.getvalue()))
 
+        @no_type_check
         def _FormattedValue(self, t):
             self.write("f")
             string = io.StringIO()
             self._fstring_FormattedValue(t, string.write)
             self.write(repr(string.getvalue()))
 
+        @no_type_check
         def _fstring_JoinedStr(self, t, write):
             for value in t.values:
                 meth = getattr(self, "_fstring_" + type(value).__name__)
                 meth(value, write)
 
+        @no_type_check
         def _fstring_Constant(self, t, write):
             assert isinstance(t.value, str)
             value = t.value.replace("{", "{{").replace("}", "}}")
             write(value)
 
+        @no_type_check
         def _fstring_FormattedValue(self, t, write):
             write("{")
             expr = io.StringIO()
@@ -424,9 +475,11 @@ else:
                 meth(t.format_spec, write)
             write("}")
 
+        @no_type_check
         def _Name(self, t):
             self.write(t.id)
 
+        @no_type_check
         def _write_constant(self, value):
             if isinstance(value, (float, complex)):
                 # Substitute overflowing decimal literal for AST infinities.
@@ -435,10 +488,12 @@ else:
                 self.write(repr(value))
 
         # From Python 3.7:
+        @no_type_check
         def _Str(self, tree):
             self.write(repr(tree.s))
 
         # From Python 3.8:
+        @no_type_check
         def _Constant(self, t):
             value = t.value
             if isinstance(value, tuple):
@@ -456,11 +511,13 @@ else:
                     self.write("u")
                 self._write_constant(t.value)
 
+        @no_type_check
         def _List(self, t):
             self.write("[")
             interleave(lambda: self.write(", "), self.dispatch, t.elts)
             self.write("]")
 
+        @no_type_check
         def _ListComp(self, t):
             self.write("[")
             self.dispatch(t.elt)
@@ -468,6 +525,7 @@ else:
                 self.dispatch(gen)
             self.write("]")
 
+        @no_type_check
         def _GeneratorExp(self, t):
             self.write("(")
             self.dispatch(t.elt)
@@ -475,6 +533,7 @@ else:
                 self.dispatch(gen)
             self.write(")")
 
+        @no_type_check
         def _SetComp(self, t):
             self.write("{")
             self.dispatch(t.elt)
@@ -482,6 +541,7 @@ else:
                 self.dispatch(gen)
             self.write("}")
 
+        @no_type_check
         def _DictComp(self, t):
             self.write("{")
             self.dispatch(t.key)
@@ -491,6 +551,7 @@ else:
                 self.dispatch(gen)
             self.write("}")
 
+        @no_type_check
         def _comprehension(self, t):
             if t.is_async:
                 self.write(" async for ")
@@ -503,6 +564,7 @@ else:
                 self.write(" if ")
                 self.dispatch(if_clause)
 
+        @no_type_check
         def _IfExp(self, t):
             self.write("(")
             self.dispatch(t.body)
@@ -512,12 +574,14 @@ else:
             self.dispatch(t.orelse)
             self.write(")")
 
+        @no_type_check
         def _Set(self, t):
             assert t.elts  # should be at least one element
             self.write("{")
             interleave(lambda: self.write(", "), self.dispatch, t.elts)
             self.write("}")
 
+        @no_type_check
         def _Dict(self, t):
             self.write("{")
 
@@ -539,6 +603,7 @@ else:
             interleave(lambda: self.write(", "), write_item, zip(t.keys, t.values))
             self.write("}")
 
+        @no_type_check
         def _Tuple(self, t):
             self.write("(")
             if len(t.elts) == 1:
@@ -551,6 +616,7 @@ else:
 
         unop = {"Invert": "~", "Not": "not", "UAdd": "+", "USub": "-"}
 
+        @no_type_check
         def _UnaryOp(self, t):
             self.write("(")
             self.write(self.unop[t.op.__class__.__name__])
@@ -574,6 +640,7 @@ else:
             "Pow": "**",
         }
 
+        @no_type_check
         def _BinOp(self, t):
             self.write("(")
             self.dispatch(t.left)
@@ -594,6 +661,7 @@ else:
             "NotIn": "not in",
         }
 
+        @no_type_check
         def _Compare(self, t):
             self.write("(")
             self.dispatch(t.left)
@@ -604,12 +672,14 @@ else:
 
         boolops = {ast.And: "and", ast.Or: "or"}
 
+        @no_type_check
         def _BoolOp(self, t):
             self.write("(")
             s = " %s " % self.boolops[t.op.__class__]
             interleave(lambda: self.write(s), self.dispatch, t.values)
             self.write(")")
 
+        @no_type_check
         def _Attribute(self, t):
             self.dispatch(t.value)
             # Special case: 3.__abs__() is a syntax error, so if t.value
@@ -620,6 +690,7 @@ else:
             self.write(".")
             self.write(t.attr)
 
+        @no_type_check
         def _Call(self, t):
             self.dispatch(t.func)
             self.write("(")
@@ -638,6 +709,7 @@ else:
                 self.dispatch(e)
             self.write(")")
 
+        @no_type_check
         def _Subscript(self, t):
             self.dispatch(t.value)
             self.write("[")
@@ -658,17 +730,21 @@ else:
                 self.dispatch(t.slice)
             self.write("]")
 
+        @no_type_check
         def _Starred(self, t):
             self.write("*")
             self.dispatch(t.value)
 
         # slice
+        @no_type_check
         def _Ellipsis(self, t):
             self.write("...")
 
+        @no_type_check
         def _Index(self, t):
             self.dispatch(t.value)
 
+        @no_type_check
         def _Slice(self, t):
             if t.lower:
                 self.dispatch(t.lower)
@@ -679,6 +755,7 @@ else:
                 self.write(":")
                 self.dispatch(t.step)
 
+        @no_type_check
         def _ExtSlice(self, t):
             if len(t.dims) == 1:
                 elt = t.dims[0]
@@ -688,6 +765,7 @@ else:
                 interleave(lambda: self.write(", "), self.dispatch, t.dims)
 
         # argument
+        @no_type_check
         def _arg(self, t):
             self.write(t.arg)
             if t.annotation:
@@ -695,6 +773,7 @@ else:
                 self.dispatch(t.annotation)
 
         # others
+        @no_type_check
         def _arguments(self, t):
             first = True
             # normal arguments
@@ -749,6 +828,7 @@ else:
                     self.write(": ")
                     self.dispatch(t.kwarg.annotation)
 
+        @no_type_check
         def _keyword(self, t):
             if t.arg is None:
                 self.write("**")
@@ -757,6 +837,7 @@ else:
                 self.write("=")
             self.dispatch(t.value)
 
+        @no_type_check
         def _Lambda(self, t):
             self.write("(")
             self.write("lambda ")
@@ -765,11 +846,13 @@ else:
             self.dispatch(t.body)
             self.write(")")
 
+        @no_type_check
         def _alias(self, t):
             self.write(t.name)
             if t.asname:
                 self.write(" as " + t.asname)
 
+        @no_type_check
         def _withitem(self, t):
             self.dispatch(t.context_expr)
             if t.optional_vars:
