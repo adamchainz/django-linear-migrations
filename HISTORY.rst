@@ -2,6 +2,9 @@
 History
 =======
 
+2.0.0 (2021-08-06)
+------------------
+
 * Renamed commands from using hypens to underscores.
   This makes them importable and therefore extensible.
   The new names are:
