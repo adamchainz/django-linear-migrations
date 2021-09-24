@@ -3,7 +3,7 @@ from functools import lru_cache
 from importlib import import_module, reload
 from pathlib import Path
 from types import ModuleType
-from typing import Generator, List, Optional, Set
+from typing import Generator, Iterable, List, Optional, Set
 
 from django.apps import AppConfig, apps
 from django.conf import settings
@@ -62,9 +62,10 @@ class MigrationDetails:
 
         # Some logic duplicated from MigrationLoader.load_disk, but avoiding
         # loading all migrations since that's relatively slow.
-        self.migrations_module_name, _explicit = MigrationLoader.migrations_module(
-            app_label
-        )
+        (
+            self.migrations_module_name,
+            _explicit,
+        ) = MigrationLoader.migrations_module(app_label)
         if self.migrations_module_name is None:
             self.migrations_module = None
         else:
@@ -108,12 +109,17 @@ class MigrationDetails:
 
 
 def check_max_migration_files(
-    *, app_configs: Optional[Set[AppConfig]] = None, **kwargs: object
+    *, app_configs: Optional[Iterable[AppConfig]] = None, **kwargs: object
 ) -> List[Error]:
     errors = []
+    if app_configs is not None:
+        app_config_set = set(app_configs)
+    else:
+        app_config_set = set()
+
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others
-        if app_configs is not None and app_config not in app_configs:
+        if app_configs is not None and app_config not in app_config_set:
             continue
         app_label = app_config.label
         migration_details = MigrationDetails(app_label)
