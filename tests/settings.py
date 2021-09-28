@@ -14,3 +14,5 @@ INSTALLED_APPS = [
     "tests.testapp",
     "django_linear_migrations",
 ]
+
+USE_TZ = True
