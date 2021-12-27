@@ -91,16 +91,14 @@ class MigrationDetails:
     @cached_property
     def dir(self) -> Path:
         assert self.migrations_module is not None
-        return Path(self.migrations_module.__file__).parent
+        module_file = self.migrations_module.__file__
+        assert module_file is not None
+        return Path(module_file).parent
 
     @cached_property
     def names(self) -> Set[str]:
         assert self.migrations_module is not None
-
-        # ModuleType.__path__ supported in future mypy
-        # https://github.com/python/mypy/issues/1422
-        path = self.migrations_module.__path__  # type: ignore[attr-defined]
-
+        path = self.migrations_module.__path__
         return {
             name
             for _, name, is_pkg in pkgutil.iter_modules(path)
