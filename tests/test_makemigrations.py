@@ -1,11 +1,12 @@
 import sys
 import time
-from io import StringIO
+from functools import partial
 from textwrap import dedent
 
 import pytest
-from django.core.management import call_command
 from django.test import TestCase, override_settings
+
+from tests.utils import run_command
 
 
 class MakeMigrationsTests(TestCase):
@@ -23,15 +24,7 @@ class MakeMigrationsTests(TestCase):
         finally:
             sys.path.pop(0)
 
-    def call_command(self, *args, **kwargs):
-        out = StringIO()
-        err = StringIO()
-        returncode = 0
-        try:
-            call_command("makemigrations", *args, stdout=out, stderr=err, **kwargs)
-        except SystemExit as exc:
-            returncode = exc.code
-        return out.getvalue(), err.getvalue(), returncode
+    call_command = partial(run_command, "makemigrations")
 
     def test_dry_run(self):
         out, err, returncode = self.call_command("--dry-run")
