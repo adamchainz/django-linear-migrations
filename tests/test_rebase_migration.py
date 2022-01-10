@@ -1,16 +1,17 @@
 import sys
 import time
-from io import StringIO
+from functools import partial
 from textwrap import dedent
 from unittest import mock
 
 import pytest
-from django.core.management import CommandError, call_command
+from django.core.management import CommandError
 from django.db import connection
 from django.db.migrations.recorder import MigrationRecorder
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from django_linear_migrations.management.commands import rebase_migration as module
+from tests.utils import run_command
 
 
 class RebaseMigrationsTests(TestCase):
@@ -28,15 +29,7 @@ class RebaseMigrationsTests(TestCase):
         finally:
             sys.path.pop(0)
 
-    def call_command(self, *args, **kwargs):
-        out = StringIO()
-        err = StringIO()
-        returncode = 0
-        try:
-            call_command("rebase_migration", *args, stdout=out, stderr=err, **kwargs)
-        except SystemExit as exc:
-            returncode = exc.code
-        return out.getvalue(), err.getvalue(), returncode
+    call_command = partial(run_command, "rebase_migration")
 
     def test_error_for_non_first_party_app(self):
         with mock.patch.object(module, "is_first_party_app_config", return_value=False):
