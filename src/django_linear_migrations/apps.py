@@ -13,8 +13,6 @@ from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver
 from django.utils.functional import cached_property
 
-from django_linear_migrations.compat import is_namespace_module
-
 
 class DjangoLinearMigrationsAppConfig(AppConfig):
     name = "django_linear_migrations"
@@ -82,7 +80,8 @@ class MigrationDetails:
     def has_migrations(self) -> bool:
         return (
             self.migrations_module is not None
-            and not is_namespace_module(self.migrations_module)
+            # Not namespace module:
+            and self.migrations_module.__file__ is not None
             # Django ignores non-package migrations modules
             and hasattr(self.migrations_module, "__path__")
             and len(self.names) > 0

@@ -1,13 +1,7 @@
 import ast
 import io
 import sys
-from types import ModuleType
 from typing import no_type_check
-
-
-def is_namespace_module(module: ModuleType) -> bool:
-    return module.__file__ is None
-
 
 if sys.version_info >= (3, 8):
     # Bridge the change from ast.Str to ast.Constant
