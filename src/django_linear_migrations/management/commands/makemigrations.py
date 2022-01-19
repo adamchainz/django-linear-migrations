@@ -1,4 +1,4 @@
-from typing import Dict, List
+from __future__ import annotations
 
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations import Migration
@@ -7,7 +7,7 @@ from django_linear_migrations.apps import MigrationDetails, first_party_app_conf
 
 
 class Command(BaseCommand):
-    def write_migration_files(self, changes: Dict[str, List[Migration]]) -> None:
+    def write_migration_files(self, changes: dict[str, list[Migration]]) -> None:
         super().write_migration_files(changes)
         if self.dry_run:
             return

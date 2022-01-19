@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import argparse
 import ast
 import re
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 import django
 from django.apps import apps
@@ -28,7 +29,7 @@ class Command(BaseCommand):
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
-    requires_system_checks: Union[bool, List[str]]
+    requires_system_checks: bool | list[str]
     if django.VERSION < (3, 2):
         requires_system_checks = False
     else:
@@ -169,7 +170,7 @@ class Command(BaseCommand):
         )
 
 
-def find_migration_names(max_migration_lines: List[str]) -> Optional[Tuple[str, str]]:
+def find_migration_names(max_migration_lines: list[str]) -> tuple[str, str] | None:
     lines = max_migration_lines
     if len(lines) <= 1:
         return None
