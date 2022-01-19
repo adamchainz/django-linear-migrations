@@ -1,6 +1,7 @@
+from __future__ import annotations
+
 import argparse
 import sys
-from typing import List, Union
 
 import django
 from django.apps import apps
@@ -14,7 +15,7 @@ class Command(BaseCommand):
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
-    requires_system_checks: Union[bool, List[str]]
+    requires_system_checks: bool | list[str]
     if django.VERSION < (3, 2):
         requires_system_checks = False
     else:

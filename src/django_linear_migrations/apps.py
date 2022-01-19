@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import pkgutil
 from functools import lru_cache
 from importlib import import_module, reload
 from pathlib import Path
 from types import ModuleType
-from typing import Generator, Iterable, List, Optional, Set
+from typing import Generator, Iterable
 
 from django.apps import AppConfig, apps
 from django.conf import settings
@@ -23,7 +25,7 @@ class DjangoLinearMigrationsAppConfig(AppConfig):
 
 
 @lru_cache(maxsize=1)
-def get_first_party_app_labels() -> Optional[Set[str]]:
+def get_first_party_app_labels() -> set[str] | None:
     if not settings.is_overridden("FIRST_PARTY_APPS"):
         return None
     return {AppConfig.create(name).label for name in settings.FIRST_PARTY_APPS}
@@ -52,8 +54,8 @@ def first_party_app_configs() -> Generator[AppConfig, None, None]:
 
 
 class MigrationDetails:
-    migrations_module_name: Optional[str]
-    migrations_module: Optional[ModuleType]
+    migrations_module_name: str | None
+    migrations_module: ModuleType | None
 
     def __init__(self, app_label: str, do_reload: bool = False) -> None:
         self.app_label = app_label
@@ -95,7 +97,7 @@ class MigrationDetails:
         return Path(module_file).parent
 
     @cached_property
-    def names(self) -> Set[str]:
+    def names(self) -> set[str]:
         assert self.migrations_module is not None
         path = self.migrations_module.__path__
         return {
@@ -106,8 +108,8 @@ class MigrationDetails:
 
 
 def check_max_migration_files(
-    *, app_configs: Optional[Iterable[AppConfig]] = None, **kwargs: object
-) -> List[Error]:
+    *, app_configs: Iterable[AppConfig] | None = None, **kwargs: object
+) -> list[Error]:
     errors = []
     if app_configs is not None:
         app_config_set = set(app_configs)
