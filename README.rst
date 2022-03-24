@@ -123,7 +123,7 @@ These are:
 * ``dlm.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dlm.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
 
-``create_max_migration_files`` command
+``create_max_migration_files`` Command
 --------------------------------------
 
 .. code-block:: sh
@@ -138,36 +138,41 @@ Pass the ``--dry-run`` flag to only list the ``max_migration.txt`` files that wo
 Pass the ``--recreate`` flag to re-create files that already exist.
 This may be useful after altering migrations with merges or manually.
 
-``rebase_migration`` command
+``rebase_migration`` Command
 ----------------------------
 
 This management command can help you fix migration conflicts.
-Following a conflicted “rebase” operation in your source control tool, run it with the name of the app to auto-fix the migrations for:
+Following a conflicted “rebase” operation in Git, run it with the name of the app to auto-fix the migrations for:
 
 .. code-block:: console
 
     $ python manage.py rebase_migration <app_label>
 
+The command will use the conflict information in the ``max_migration.txt`` file to determine which migration to rebase.
+It will then rename the migration, edit it to depend on the new migration in your main branch, and update ``max_migration.txt``.
+See below for some examples and caveats.
+
 Note rebasing the migration might not always be the *correct* thing to do.
-If the migrations in main and feature branches have both affected the same models, rebasing the migration on the end may not make sense.
+If the migrations in main and feature branches have both affected the same models, rebasing the migration to the end may not make sense.
 However, such parallel changes would *normally* cause conflicts in your models files or other parts of the source code as well.
 
-Let's walk through an example using Git, although it should extend to other source control tools.
+Worked Example
+^^^^^^^^^^^^^^
 
 Imagine you were working on your project's ``books`` app in a feature branch called ``titles`` and created a migration called ``0002_longer_titles``.
 Meanwhile a commit has been merged to your ``main`` branch with a *different* 2nd migration for ``books`` called ``0002_author_nicknames``.
 Thanks to django-linear-migrations, the ``max_migration.txt`` file will show as conflicted between your feature and main branches.
 
-You start the fix by reversing your new migration from your local database.
+Start the fix by reversing your new migration from your local database.
 This is necessary since it will be renamed after rebasing and seen as unapplied.
-You do this by switching to the feature branch ``titles`` migrating back to the last common migration:
+Do this by switching to the feature branch ``titles`` migrating back to the last common migration:
 
 .. code-block:: console
 
     $ git switch titles
     $ python manage.py migrate books 0001
 
-You then fetch the latest code:
+Then, fetch the latest code:
 
 .. code-block:: console
 
@@ -175,7 +180,8 @@ You then fetch the latest code:
     $ git pull
     ...
 
-You then rebase your ``titles`` branch on top of it, for which Git will detect the conflict on ``max_migration.txt``:
+Next, rebase your ``titles`` branch on top of it.
+During this process, Git will detect the conflict on ``max_migration.txt``:
 
 .. code-block:: console
 
@@ -190,7 +196,7 @@ You then rebase your ``titles`` branch on top of it, for which Git will detect t
     To abort and get back to the state before "git rebase", run "git rebase --abort".
     Could not apply 123456789... Increase Book title length
 
-If you look at the contents of the ``books`` app's ``max_migration.txt`` at this point, it will look something like this:
+The contents of the ``books`` app's ``max_migration.txt`` at this point will look something like this:
 
 .. code-block:: console
 
@@ -201,7 +207,7 @@ If you look at the contents of the ``books`` app's ``max_migration.txt`` at this
     0002_longer_titles
     >>>>>>> 123456789 (Increase Book title length)
 
-It's at this point you can use ``rebase_migration`` to automatically fix the ``books`` migration history:
+At this point, use ``rebase_migration`` to automatically fix the ``books`` migration history:
 
 .. code-block:: console
 
@@ -228,6 +234,41 @@ And then migrate your local database to allow you to continue development:
     Running migrations:
       Applying books.0002_author_nicknames... OK
       Applying books.0003_longer_titles... OK
+
+Code Formatting
+^^^^^^^^^^^^^^^
+
+``rebase_migration`` does not guarantee that its edits match your code style.
+If you use a formatter like Black, you’ll want to run it after applying ``rebase_migration``.
+
+If you use `pre-commit <https://pre-commit.com/>`__, note that Git does not invoke hooks during rebase commits.
+You can run it manually on changed files with ``pre-commit run``.
+
+Branches With Multiple Commits
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Imagine the same example as above, but your feature branch has several commits editing the migration.
+This time, before rebasing onto the latest ``main`` branch, squash the commits in your feature branch together.
+This way, ``rebase_migration`` can edit the migration file when the conflict occurs.
+
+You can do this with:
+
+.. code-block:: console
+
+    $ git rebase -i --keep-base main
+
+This will open Git’s `interactive mode <https://git-scm.com/docs/git-rebase#_interactive_mode>`__ file.
+Edit this so that every comit after the first will be squashed, by starting each line with “s”.
+Then close the file, and the rebase will execute.
+
+After this operation, you can rebase onto your latest ``main`` branch as per the previous example.
+
+Branches With Multiple Migrations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``rebase_migration`` does not currently support rebasing multiple migrations (in the same app).
+This is `an open feature request <https://github.com/adamchainz/django-linear-migrations/issues/27>`__, but it is not a priority, since it’s generally a good idea to restrict changes to one migration at a time.
+Consider merging your migrations into one before rebasing.
 
 Inspiration
 ===========
