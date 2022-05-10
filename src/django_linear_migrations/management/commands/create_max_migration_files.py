@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import sys
 
-import django
 from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
 
@@ -15,11 +14,7 @@ class Command(BaseCommand):
 
     # Checks disabled because the django-linear-migrations' checks would
     # prevent us continuing
-    requires_system_checks: bool | list[str]
-    if django.VERSION < (3, 2):
-        requires_system_checks = False
-    else:
-        requires_system_checks = []
+    requires_system_checks: list[str] = []
 
     def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
