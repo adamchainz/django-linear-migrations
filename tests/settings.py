@@ -15,6 +15,8 @@ TIME_ZONE = "UTC"
 INSTALLED_APPS = [
     "tests.testapp",
     "django_linear_migrations",
+    # Force django_migrations creation by having an app with migrations:
+    "django.contrib.contenttypes",
 ]
 
 USE_TZ = True
