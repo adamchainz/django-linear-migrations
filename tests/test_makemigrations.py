@@ -29,7 +29,7 @@ class MakeMigrationsTests(TestCase):
     call_command = partial(run_command, "makemigrations")
 
     def test_dry_run(self):
-        out, err, returncode = self.call_command("--dry-run")
+        out, err, returncode = self.call_command("--dry-run", "testapp")
 
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
