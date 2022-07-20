@@ -3,6 +3,8 @@ from __future__ import annotations
 import argparse
 import ast
 import re
+import shutil
+import subprocess
 from pathlib import Path
 
 from django.apps import apps
@@ -158,6 +160,12 @@ class Command(BaseCommand):
         rebased_migration_path.rename(new_path)
         new_path.write_text(new_content)
         max_migration_txt.write_text(f"{new_name}\n")
+
+        if black_path := shutil.which("black"):
+            subprocess.run(
+                [black_path, "--fast", "--", new_path],
+                capture_output=True,
+            )
 
         self.stdout.write(
             f"Renamed {rebased_migration_path.parts[-1]} to {new_path.parts[-1]},"
