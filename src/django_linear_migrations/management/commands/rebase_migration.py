@@ -161,7 +161,8 @@ class Command(BaseCommand):
         new_path.write_text(new_content)
         max_migration_txt.write_text(f"{new_name}\n")
 
-        if black_path := shutil.which("black"):
+        black_path = shutil.which("black")
+        if black_path:
             subprocess.run(
                 [black_path, "--fast", "--", new_path],
                 capture_output=True,
