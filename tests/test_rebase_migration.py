@@ -351,10 +351,11 @@ class RebaseMigrationsTests(TestCase):
 
         assert not (self.migrations_dir / "0002_longer_titles.py").exists()
         new_content = (self.migrations_dir / "0003_longer_titles.py").read_text()
-        deps = "[('testapp', '0002_author_nicknames'), ('otherapp', '0001_initial')]"
+        deps = '[("testapp", "0002_author_nicknames"), ("otherapp", "0001_initial")]'
         assert new_content == dedent(
             f"""\
             from django.db import migrations
+
 
             class Migration(migrations.Migration):
                 dependencies = {deps}
@@ -406,16 +407,16 @@ class RebaseMigrationsTests(TestCase):
 
         assert not (self.migrations_dir / "0002_longer_titles.py").exists()
         new_content = (self.migrations_dir / "0003_longer_titles.py").read_text()
-        deps = (
-            "[('testapp', '0002_author_nicknames'), "
-            + "migrations.swappable_dependency('otherapp.0001_initial')]"
-        )
         assert new_content == dedent(
-            f"""\
+            """\
             from django.db import migrations
 
+
             class Migration(migrations.Migration):
-                dependencies = {deps}
+                dependencies = [
+                    ("testapp", "0002_author_nicknames"),
+                    migrations.swappable_dependency("otherapp.0001_initial"),
+                ]
                 operations = []
             """
         )
