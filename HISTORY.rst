@@ -2,6 +2,9 @@
 History
 =======
 
+2.5.1 (2022-07-20)
+------------------
+
 * The ``rebase_migration`` command now runs ``black`` on the modified file, if it is found on your ``PATH``.
   This copies `Django 4.1’s behaviour <https://docs.djangoproject.com/en/4.1/releases/4.1/#management-commands>`__ in commands that generate and modify migration files.
 
