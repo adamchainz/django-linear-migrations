@@ -150,6 +150,7 @@ Following a conflicted “rebase” operation in Git, run it with the name of th
 
 The command will use the conflict information in the ``max_migration.txt`` file to determine which migration to rebase.
 It will then rename the migration, edit it to depend on the new migration in your main branch, and update ``max_migration.txt``.
+If Black is installed, it will format the updated migration file with it, like Django’s built-in migration commands (from version 4.1+).
 See below for some examples and caveats.
 
 Note rebasing the migration might not always be the *correct* thing to do.
