@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from typing import Any
 
 from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
@@ -39,8 +40,8 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(
-        self, *app_labels: str, dry_run: bool, recreate: bool, **options: object
+    def handle(  # type: ignore [override]
+        self, *app_labels: str, dry_run: bool, recreate: bool, **options: Any
     ) -> None:
         # Copied check from makemigrations
         labels = set(app_labels)

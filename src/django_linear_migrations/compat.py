@@ -14,7 +14,9 @@ if sys.version_info >= (3, 8):
         return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
     def get_ast_constant_str_value(node: ast.Constant) -> str:
-        return node.value
+        value = node.value
+        assert isinstance(value, str)
+        return value
 
     def make_ast_constant_str(value: str) -> ast.Constant:
         return ast.Constant(value=value, kind=None)

@@ -24,13 +24,16 @@ class CreateMaxMigrationFilesTests(TestCase):
         finally:
             sys.path.pop(0)
 
-    def call_command(self, *args, **kwargs):
+    def call_command(self, *args: str) -> tuple[str, str, int]:
         out = StringIO()
         err = StringIO()
         returncode = 0
         try:
             call_command(
-                "create_max_migration_files", *args, stdout=out, stderr=err, **kwargs
+                "create_max_migration_files",
+                *args,
+                stdout=out,
+                stderr=err,
             )
         except SystemExit as exc:
             returncode = exc.code
