@@ -40,7 +40,7 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(  # type: ignore [override]
+    def handle(
         self, *app_labels: str, dry_run: bool, recreate: bool, **options: Any
     ) -> None:
         # Copied check from makemigrations

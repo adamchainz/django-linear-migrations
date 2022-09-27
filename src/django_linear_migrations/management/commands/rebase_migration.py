@@ -39,9 +39,7 @@ class Command(BaseCommand):
             help="Specify the app label to rebase the migration for.",
         )
 
-    def handle(  # type: ignore [override]
-        self, *args: Any, app_label: str, **options: Any
-    ) -> None:
+    def handle(self, *args: Any, app_label: str, **options: Any) -> None:
         app_config = apps.get_app_config(app_label)
         if not is_first_party_app_config(app_config):
             raise CommandError(f"{app_label!r} is not a first-party app.")
