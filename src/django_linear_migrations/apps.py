@@ -6,9 +6,9 @@ from importlib import import_module
 from importlib import reload
 from pathlib import Path
 from types import ModuleType
+from typing import cast
 from typing import Generator
 from typing import Iterable
-from typing import cast
 
 from django.apps import AppConfig
 from django.apps import apps
@@ -16,8 +16,10 @@ from django.conf import settings
 from django.core.checks import Error
 from django.core.checks import register
 from django.core.checks import Tags
+from django.core.management import CommandError
 from django.core.signals import setting_changed
-from django.db import DEFAULT_DB_ALIAS, connections
+from django.db import connections
+from django.db import DEFAULT_DB_ALIAS
 from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver
 from django.utils.functional import cached_property
@@ -58,6 +60,34 @@ def first_party_app_configs() -> Generator[AppConfig, None, None]:
     for app_config in apps.get_app_configs():
         if is_first_party_app_config(app_config):
             yield app_config
+
+
+def get_graph_plan(
+    app_names: Iterable[str] | None = None,
+    database: str = DEFAULT_DB_ALIAS,
+) -> list[tuple[str, str]]:
+    loader = MigrationLoader(connections[database], ignore_no_migrations=True)
+    conflicts = loader.detect_conflicts()
+    if app_names:
+        conflicts = {
+            app_label: conflict
+            for app_label, conflict in conflicts.items()
+            if app_label in app_names
+        }
+    if conflicts:
+        name_str = "; ".join(
+            f"{', '.join(names)} in {app}" for app, names in conflicts.items()
+        )
+        raise CommandError(
+            "Conflicting migrations detected; multiple leaf nodes in the "
+            + f"migration graph: {name_str}.\n"
+            + "To fix them run 'python manage.py makemigrations --merge'"
+        )
+    nodes = loader.graph.leaf_nodes()
+    if app_names:
+        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_names]
+    plan = loader.graph._generate_plan(nodes, at_end=True)
+    return cast(list[tuple[str, str]], plan)
 
 
 class MigrationDetails:
@@ -113,13 +143,6 @@ class MigrationDetails:
             if not is_pkg and name[0] not in "_~"
         }
 
-    @cached_property
-    def plan(self) -> list[tuple[str, str]]:
-        loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
-        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in self.app_label]
-        plan = loader.graph._generate_plan(nodes, at_end=True)
-        return cast(list[tuple[str, str]], plan)
-
 
 def check_max_migration_files(
     *, app_configs: Iterable[AppConfig] | None = None, **kwargs: object
@@ -130,6 +153,7 @@ def check_max_migration_files(
     else:
         app_config_set = set()
 
+    graph_plan = get_graph_plan(app_names=[a.label for a in first_party_app_configs()])
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others
         if app_configs is not None and app_config not in app_config_set:
@@ -187,7 +211,7 @@ def check_max_migration_files(
             )
             continue
 
-        _, real_max_migration_name = migration_details.plan[-1]
+        real_max_migration_name = [k[1] for k in graph_plan if k[0] == app_label][-1]
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(

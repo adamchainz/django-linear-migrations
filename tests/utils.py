@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from io import StringIO
+from textwrap import dedent
 
 from django.core.management import call_command
 
@@ -14,3 +15,13 @@ def run_command(*args, **kwargs):
     except SystemExit as exc:  # pragma: no cover
         returncode = exc.code
     return out.getvalue(), err.getvalue(), returncode
+
+
+def empty_migration() -> str:
+    return dedent(
+        """
+        from django.db import migrations
+        class Migration(migrations.Migration):
+            pass
+        """
+    )

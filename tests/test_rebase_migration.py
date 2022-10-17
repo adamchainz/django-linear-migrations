@@ -15,6 +15,7 @@ from django.test import SimpleTestCase
 from django.test import TestCase
 
 from django_linear_migrations.management.commands import rebase_migration as module
+from tests.utils import empty_migration
 from tests.utils import run_command
 
 
@@ -44,7 +45,7 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_no_max_migration_txt(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
 
         with pytest.raises(CommandError) as excinfo:
             self.call_command("testapp")
@@ -53,7 +54,7 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_no_migration_conflict(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         with pytest.raises(CommandError) as excinfo:
@@ -66,7 +67,7 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_non_existent_merged_migration(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
         (self.migrations_dir / "max_migration.txt").write_text(
             dedent(
                 """\
@@ -90,8 +91,8 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_non_existent_rebased_migration(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
         (self.migrations_dir / "max_migration.txt").write_text(
             dedent(
                 """\
@@ -115,9 +116,9 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_non_existent_rebased_migration_file(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
-        (self.migrations_dir / "0002_longer_titles.pyc").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_longer_titles.pyc").write_text(empty_migration())
         (self.migrations_dir / "max_migration.txt").write_text(
             dedent(
                 """\
@@ -140,9 +141,9 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_applied_migration(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
-        (self.migrations_dir / "0002_longer_titles.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_longer_titles.py").write_text(empty_migration())
         (self.migrations_dir / "max_migration.txt").write_text(
             dedent(
                 """\
@@ -169,8 +170,8 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_missing_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\
@@ -202,8 +203,8 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_unparseable_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\
@@ -236,8 +237,8 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_no_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\
@@ -273,8 +274,8 @@ class RebaseMigrationsTests(TestCase):
 
     def test_error_for_double_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\
@@ -311,7 +312,7 @@ class RebaseMigrationsTests(TestCase):
 
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\
@@ -367,7 +368,7 @@ class RebaseMigrationsTests(TestCase):
 
     def test_success_swappable_dependency(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
         (self.migrations_dir / "0002_longer_titles.py").write_text(
             dedent(
                 """\

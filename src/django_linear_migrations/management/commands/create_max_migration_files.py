@@ -8,6 +8,7 @@ from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
 
 from django_linear_migrations.apps import first_party_app_configs
+from django_linear_migrations.apps import get_graph_plan
 from django_linear_migrations.apps import MigrationDetails
 
 
@@ -57,6 +58,7 @@ class Command(BaseCommand):
             sys.exit(2)
 
         any_created = False
+        graph_plan = get_graph_plan(app_names=labels)
         for app_config in first_party_app_configs():
             if labels and app_config.label not in labels:
                 continue
@@ -68,7 +70,9 @@ class Command(BaseCommand):
             max_migration_txt = migration_details.dir / "max_migration.txt"
             if recreate or not max_migration_txt.exists():
                 if not dry_run:
-                    _, max_migration_name = migration_details.plan[-1]
+                    max_migration_name = [
+                        k[1] for k in graph_plan if k[0] == app_config.label
+                    ][-1]
                     max_migration_txt.write_text(max_migration_name + "\n")
                     self.stdout.write(
                         f"Created max_migration.txt for {app_config.label}."
