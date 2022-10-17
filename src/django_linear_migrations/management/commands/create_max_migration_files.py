@@ -68,7 +68,7 @@ class Command(BaseCommand):
             max_migration_txt = migration_details.dir / "max_migration.txt"
             if recreate or not max_migration_txt.exists():
                 if not dry_run:
-                    max_migration_name = max(migration_details.names)
+                    _, max_migration_name = migration_details.plan[-1]
                     max_migration_txt.write_text(max_migration_name + "\n")
                     self.stdout.write(
                         f"Created max_migration.txt for {app_config.label}."

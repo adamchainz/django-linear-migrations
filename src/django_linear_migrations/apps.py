@@ -16,6 +16,7 @@ from django.core.checks import Error
 from django.core.checks import register
 from django.core.checks import Tags
 from django.core.signals import setting_changed
+from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver
 from django.utils.functional import cached_property
@@ -111,6 +112,17 @@ class MigrationDetails:
             if not is_pkg and name[0] not in "_~"
         }
 
+    @cached_property
+    def plan(self) -> list[tuple[str, str]]:
+        loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
+        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in self.app_label]
+        plan = []
+        for node in nodes:
+            for migration in loader.graph.forwards_plan(node):
+                if migration not in plan:
+                    plan.append(migration)
+        return plan
+
 
 def check_max_migration_files(
     *, app_configs: Iterable[AppConfig] | None = None, **kwargs: object
@@ -178,7 +190,7 @@ def check_max_migration_files(
             )
             continue
 
-        real_max_migration_name = max(migration_details.names)
+        _, real_max_migration_name = migration_details.plan[-1]
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(
