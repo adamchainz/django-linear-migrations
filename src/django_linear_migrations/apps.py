@@ -8,6 +8,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Generator
 from typing import Iterable
+from typing import cast
 
 from django.apps import AppConfig
 from django.apps import apps
@@ -116,12 +117,8 @@ class MigrationDetails:
     def plan(self) -> list[tuple[str, str]]:
         loader = MigrationLoader(connections[DEFAULT_DB_ALIAS])
         nodes = [key for key in loader.graph.leaf_nodes() if key[0] in self.app_label]
-        plan = []
-        for node in nodes:
-            for migration in loader.graph.forwards_plan(node):
-                if migration not in plan:
-                    plan.append(migration)
-        return plan
+        plan = loader.graph._generate_plan(nodes, at_end=True)
+        return cast(list[tuple[str, str]], plan)
 
 
 def check_max_migration_files(

@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import sys
 import time
+from textwrap import dedent
 
 import pytest
 from django.test import override_settings
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 from django_linear_migrations.apps import check_max_migration_files
 
 
-class CheckMaxMigrationFilesTests(SimpleTestCase):
+class CheckMaxMigrationFilesTests(TestCase):
     @pytest.fixture(autouse=True)
     def tmp_path_fixture(self, tmp_path):
         migrations_module_name = "migrations" + str(time.time()).replace(".", "")
@@ -89,8 +90,24 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E004(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_updates.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
+        (self.migrations_dir / "0002_updates.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         result = check_max_migration_files()
@@ -103,9 +120,16 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
         )
 
     def test_okay(self):
+        migrations_txt = dedent(
+            """
+            from django.db import migrations
+            class Migration(migrations.Migration):
+                pass
+            """
+        )
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_updates.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(migrations_txt)
+        (self.migrations_dir / "0002_updates.py").write_text(migrations_txt)
         (self.migrations_dir / "max_migration.txt").write_text("0002_updates\n")
 
         result = check_max_migration_files()

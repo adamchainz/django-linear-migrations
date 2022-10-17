@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import time
 from io import StringIO
+from textwrap import dedent
 
 import pytest
 from django.core.management import call_command
@@ -99,7 +100,15 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
 
         out, err, returncode = self.call_command()
 
@@ -122,7 +131,15 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_recreate(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         out, err, returncode = self.call_command("--recreate")
@@ -144,7 +161,15 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_specific_app_label(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
 
         out, err, returncode = self.call_command("testapp")
 
@@ -169,3 +194,41 @@ class CreateMaxMigrationFilesTests(TestCase):
         assert out == "No max_migration.txt files need creating.\n"
         assert err == ""
         assert returncode == 0
+
+    def test_success_custom_migration_name(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    pass
+                """
+            )
+        )
+        (self.migrations_dir / "custom_name.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', '0001_initial')]
+                """
+            )
+        )
+        (self.migrations_dir / "0002_updates.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', 'custom_name')]
+                """
+            )
+        )
+
+        out, err, returncode = self.call_command()
+
+        assert out == "Created max_migration.txt for testapp.\n"
+        assert err == ""
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert max_migration_txt.read_text() == "0002_updates\n"
