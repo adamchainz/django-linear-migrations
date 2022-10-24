@@ -16,7 +16,6 @@ from django.conf import settings
 from django.core.checks import Error
 from django.core.checks import register
 from django.core.checks import Tags
-from django.core.management import CommandError
 from django.core.signals import setting_changed
 from django.db import connections
 from django.db import DEFAULT_DB_ALIAS
@@ -63,26 +62,9 @@ def first_party_app_configs() -> Generator[AppConfig, None, None]:
 
 
 def get_graph_plan(
+    loader: MigrationLoader,
     app_names: Iterable[str] | None = None,
-    database: str = DEFAULT_DB_ALIAS,
 ) -> list[tuple[str, str]]:
-    loader = MigrationLoader(connections[database], ignore_no_migrations=True)
-    conflicts = loader.detect_conflicts()
-    if app_names:
-        conflicts = {
-            app_label: conflict
-            for app_label, conflict in conflicts.items()
-            if app_label in app_names
-        }
-    if conflicts:
-        name_str = "; ".join(
-            f"{', '.join(names)} in {app}" for app, names in conflicts.items()
-        )
-        raise CommandError(
-            "Conflicting migrations detected; multiple leaf nodes in the "
-            + f"migration graph: {name_str}.\n"
-            + "To fix them run 'python manage.py makemigrations --merge'"
-        )
     nodes = loader.graph.leaf_nodes()
     if app_names:
         nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_names]
@@ -153,7 +135,34 @@ def check_max_migration_files(
     else:
         app_config_set = set()
 
-    graph_plan = get_graph_plan(app_names=[a.label for a in first_party_app_configs()])
+    migration_loader = MigrationLoader(
+        connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
+    )
+    app_names = [a.label for a in first_party_app_configs()]
+    conflicts = migration_loader.detect_conflicts()
+    if app_names:
+        conflicts = {
+            app_label: conflict
+            for app_label, conflict in conflicts.items()
+            if app_label in app_names
+        }
+    if conflicts:
+        name_str = "; ".join(
+            f"{', '.join(names)} in {app}" for app, names in conflicts.items()
+        )
+        errors.append(
+            Error(
+                id="dlm.E000",
+                msg=(
+                    "Conflicting migrations detected;"
+                    + f" multiple leaf nodes in the migration graph: {name_str}."
+                ),
+                hint="Run 'python manage.py makemigrations --merge'",
+            )
+        )
+        return errors
+
+    graph_plan = get_graph_plan(loader=migration_loader, app_names=app_names)
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others
         if app_configs is not None and app_config not in app_config_set:
