@@ -4,7 +4,8 @@ import sys
 import time
 
 import pytest
-from django.test import SimpleTestCase, override_settings
+from django.test import override_settings
+from django.test import SimpleTestCase
 
 from django_linear_migrations.apps import check_max_migration_files
 

@@ -3,7 +3,8 @@ from __future__ import annotations
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations import Migration
 
-from django_linear_migrations.apps import MigrationDetails, first_party_app_configs
+from django_linear_migrations.apps import first_party_app_configs
+from django_linear_migrations.apps import MigrationDetails
 
 
 class Command(BaseCommand):

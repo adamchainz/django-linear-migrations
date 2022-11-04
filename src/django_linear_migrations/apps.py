@@ -2,14 +2,19 @@ from __future__ import annotations
 
 import pkgutil
 from functools import lru_cache
-from importlib import import_module, reload
+from importlib import import_module
+from importlib import reload
 from pathlib import Path
 from types import ModuleType
-from typing import Generator, Iterable
+from typing import Generator
+from typing import Iterable
 
-from django.apps import AppConfig, apps
+from django.apps import AppConfig
+from django.apps import apps
 from django.conf import settings
-from django.core.checks import Error, Tags, register
+from django.core.checks import Error
+from django.core.checks import register
+from django.core.checks import Tags
 from django.core.signals import setting_changed
 from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver

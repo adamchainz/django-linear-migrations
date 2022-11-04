@@ -9,18 +9,19 @@ from pathlib import Path
 from typing import Any
 
 from django.apps import apps
-from django.core.management import BaseCommand, CommandError
-from django.db import DatabaseError, connections
+from django.core.management import BaseCommand
+from django.core.management import CommandError
+from django.db import connections
+from django.db import DatabaseError
 from django.db.migrations.recorder import MigrationRecorder
 
-from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
-from django_linear_migrations.compat import (
-    ast_constant_type,
-    ast_unparse,
-    get_ast_constant_str_value,
-    is_ast_constant_str,
-    make_ast_constant_str,
-)
+from django_linear_migrations.apps import is_first_party_app_config
+from django_linear_migrations.apps import MigrationDetails
+from django_linear_migrations.compat import ast_constant_type
+from django_linear_migrations.compat import ast_unparse
+from django_linear_migrations.compat import get_ast_constant_str_value
+from django_linear_migrations.compat import is_ast_constant_str
+from django_linear_migrations.compat import make_ast_constant_str
 
 
 class Command(BaseCommand):

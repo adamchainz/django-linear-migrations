@@ -6,7 +6,8 @@ from functools import partial
 from textwrap import dedent
 
 import pytest
-from django.test import TestCase, override_settings
+from django.test import override_settings
+from django.test import TestCase
 
 from tests.utils import run_command
 
