@@ -25,10 +25,10 @@ class CreateMaxMigrationFilesTests(TestCase):
         finally:
             sys.path.pop(0)
 
-    def call_command(self, *args: str) -> tuple[str, str, int]:
+    def call_command(self, *args: str) -> tuple[str, str, int | str | None]:
         out = StringIO()
         err = StringIO()
-        returncode = 0
+        returncode: int | str | None = 0
         try:
             call_command(
                 "create_max_migration_files",
