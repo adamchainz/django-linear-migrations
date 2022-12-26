@@ -2,7 +2,7 @@
 django-linear-migrations
 ========================
 
-.. image:: https://img.shields.io/github/workflow/status/adamchainz/django-linear-migrations/CI/main?style=for-the-badge
+.. image:: https://img.shields.io/github/actions/workflow/status/adamchainz/django-linear-migrations/main.yml?branch=main&style=for-the-badge
    :target: https://github.com/adamchainz/django-linear-migrations/actions?workflow=CI
 
 .. image:: https://img.shields.io/badge/Coverage-100%25-success?style=for-the-badge
