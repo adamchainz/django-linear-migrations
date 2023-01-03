@@ -6,11 +6,8 @@ from importlib import import_module
 from importlib import reload
 from pathlib import Path
 from types import ModuleType
-from typing import cast
 from typing import Generator
 from typing import Iterable
-from typing import List
-from typing import Tuple
 
 from django.apps import AppConfig
 from django.apps import apps
@@ -70,8 +67,8 @@ def get_graph_plan(
     nodes = loader.graph.leaf_nodes()
     if app_names:
         nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_names]
-    plan = loader.graph._generate_plan(nodes, at_end=True)
-    return cast(List[Tuple[str, str]], plan)
+    plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
+    return plan
 
 
 class MigrationDetails:
