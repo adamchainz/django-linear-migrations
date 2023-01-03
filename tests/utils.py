@@ -17,11 +17,10 @@ def run_command(*args, **kwargs):
     return out.getvalue(), err.getvalue(), returncode
 
 
-def empty_migration() -> str:
-    return dedent(
-        """
-        from django.db import migrations
-        class Migration(migrations.Migration):
-            pass
-        """
-    )
+empty_migration = dedent(
+    """\
+    from django.db import migrations
+    class Migration(migrations.Migration):
+        pass
+    """
+)

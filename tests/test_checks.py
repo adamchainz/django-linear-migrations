@@ -56,7 +56,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_dlm_E001(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         result = check_max_migration_files()
 
@@ -66,7 +66,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_dlm_E002(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("line1\nline2\n")
 
         result = check_max_migration_files()
@@ -77,7 +77,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_dlm_E003(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("0001_start\n")
 
         result = check_max_migration_files()
@@ -91,7 +91,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_dlm_E004(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "0002_updates.py").write_text(
             dedent(
                 """
@@ -114,7 +114,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_dlm_E005(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "custom_name.py").write_text(
             dedent(
                 """
@@ -146,7 +146,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
     def test_okay(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "0002_updates.py").write_text(
             dedent(
                 """

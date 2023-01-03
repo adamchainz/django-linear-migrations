@@ -80,7 +80,7 @@ class CreateMaxMigrationFilesTests(TestCase):
     @override_settings(FIRST_PARTY_APPS=[])
     def test_success_setting_not_first_party(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         out, err, returncode = self.call_command()
 
@@ -90,7 +90,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_dry_run(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         out, err, returncode = self.call_command("--dry-run")
 
@@ -102,7 +102,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         out, err, returncode = self.call_command()
 
@@ -114,7 +114,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_already_exists(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         out, err, returncode = self.call_command()
@@ -125,7 +125,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_recreate(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         out, err, returncode = self.call_command("--recreate")
@@ -136,7 +136,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_recreate_dry_run(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         out, err, returncode = self.call_command("--recreate", "--dry-run")
@@ -147,7 +147,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_specific_app_label(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         out, err, returncode = self.call_command("testapp")
 
@@ -175,7 +175,7 @@ class CreateMaxMigrationFilesTests(TestCase):
 
     def test_success_custom_migration_name(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "custom_name.py").write_text(
             dedent(
                 """
