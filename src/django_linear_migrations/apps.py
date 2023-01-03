@@ -112,6 +112,20 @@ class MigrationDetails:
         }
 
 
+def get_graph_plan(
+    loader: MigrationLoader, app_labels: Iterable[str] | None = None
+) -> list[tuple[str, str]]:
+    nodes = loader.graph.leaf_nodes()
+    if app_labels:
+        nodes = [
+            (app_label, name)
+            for app_label, name in loader.graph.leaf_nodes()
+            if app_label in app_labels
+        ]
+    plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
+    return plan
+
+
 def check_max_migration_files(
     *, app_configs: Iterable[AppConfig] | None = None, **kwargs: object
 ) -> list[Error]:
@@ -121,6 +135,33 @@ def check_max_migration_files(
     else:
         app_config_set = set()
 
+    migration_loader = MigrationLoader(None, ignore_no_migrations=True)
+    app_labels = [a.label for a in first_party_app_configs()]
+    conflicts = {
+        app_label: names
+        for app_label, names in migration_loader.detect_conflicts().items()
+        if app_label in app_labels
+    }
+    if conflicts:
+        conflict_msg = "".join(
+            f"\n* {app_label}: {', '.join(sorted(names))}"
+            for app_label, names in conflicts.items()
+        )
+        errors.append(
+            Error(
+                id="dlm.E005",
+                msg=(
+                    "Conflicting migrations detected - multiple leaf nodes "
+                    + f"detected for these apps:{conflict_msg}"
+                ),
+                hint=(
+                    "Fix the conflict, e.g. with './manage.py makemigrations --merge'."
+                ),
+            )
+        )
+        return errors
+
+    graph_plan = get_graph_plan(loader=migration_loader, app_labels=app_labels)
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others
         if app_configs is not None and app_config not in app_config_set:
@@ -178,7 +219,9 @@ def check_max_migration_files(
             )
             continue
 
-        real_max_migration_name = max(migration_details.names)
+        real_max_migration_name = [
+            name for gp_app_label, name in graph_plan if gp_app_label == app_label
+        ][-1]
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(

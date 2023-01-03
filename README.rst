@@ -122,6 +122,7 @@ These are:
 * ``dlm.E002``: ``<app_label>``'s max_migration.txt contains multiple lines.
 * ``dlm.E003``: ``<app_label>``'s max_migration.txt points to non-existent migration '``<bad_migration_name>``'.
 * ``dlm.E004``: ``<app_label>``'s max_migration.txt contains '``<max_migration_name>``', but the latest migration is '``<real_max_migration_name>``'.
+* ``dlm.E005``: Conflicting migrations detected; multiple leaf nodes in the migration graph: ``<conflicting_migrations>``
 
 ``create_max_migration_files`` Command
 --------------------------------------

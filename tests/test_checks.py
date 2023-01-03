@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import sys
 import time
+from textwrap import dedent
 
 import pytest
 from django.test import override_settings
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 from django_linear_migrations.apps import check_max_migration_files
+from tests.utils import empty_migration
 
 
-class CheckMaxMigrationFilesTests(SimpleTestCase):
+class CheckMaxMigrationFilesTests(TestCase):
     @pytest.fixture(autouse=True)
     def tmp_path_fixture(self, tmp_path):
         migrations_module_name = "migrations" + str(time.time()).replace(".", "")
@@ -54,7 +56,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E001(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
 
         result = check_max_migration_files()
 
@@ -64,7 +66,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E002(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("line1\nline2\n")
 
         result = check_max_migration_files()
@@ -75,7 +77,7 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E003(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "max_migration.txt").write_text("0001_start\n")
 
         result = check_max_migration_files()
@@ -89,8 +91,16 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
 
     def test_dlm_E004(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_updates.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_updates.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', '0001_initial')]
+                """
+            )
+        )
         (self.migrations_dir / "max_migration.txt").write_text("0001_initial\n")
 
         result = check_max_migration_files()
@@ -102,10 +112,50 @@ class CheckMaxMigrationFilesTests(SimpleTestCase):
             + " latest migration is '0002_updates'."
         )
 
+    def test_dlm_E005(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "custom_name.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', '0001_initial')]
+                """
+            )
+        )
+        (self.migrations_dir / "0002_updates.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', '0001_initial')]
+                """
+            )
+        )
+        (self.migrations_dir / "max_migration.txt").write_text("0002_updates\n")
+
+        result = check_max_migration_files()
+        assert len(result) == 1
+        assert result[0].id == "dlm.E005"
+        assert result[0].msg == (
+            "Conflicting migrations detected - multiple leaf nodes "
+            + "detected for these apps:\n"
+            + "* testapp: 0002_updates, custom_name"
+        )
+
     def test_okay(self):
         (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").touch()
-        (self.migrations_dir / "0002_updates.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_updates.py").write_text(
+            dedent(
+                """
+                from django.db import migrations
+                class Migration(migrations.Migration):
+                    dependencies = [('testapp', '0001_initial')]
+                """
+            )
+        )
         (self.migrations_dir / "max_migration.txt").write_text("0002_updates\n")
 
         result = check_max_migration_files()
