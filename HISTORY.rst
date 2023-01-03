@@ -8,6 +8,8 @@ History
 * Use Django’s ``MigrationLoader`` to find the latest migrations.
   This also means django-linear-migrations operations detect migration conflicts.
 
+  Thanks to q0w in `PR #208 <https://github.com/adamchainz/django-linear-migrations/pull/208>`__.
+
 2.5.1 (2022-07-20)
 ------------------
 
