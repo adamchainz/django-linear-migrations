@@ -64,7 +64,11 @@ def get_graph_plan(
 ) -> list[tuple[str, str]]:
     nodes = loader.graph.leaf_nodes()
     if app_labels:
-        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_labels]
+        nodes = [
+            (app_label, name)
+            for app_label, name in loader.graph.leaf_nodes()
+            if app_label in app_labels
+        ]
     plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
     return plan
 
@@ -216,7 +220,9 @@ def check_max_migration_files(
             )
             continue
 
-        real_max_migration_name = [k[1] for k in graph_plan if k[0] == app_label][-1]
+        real_max_migration_name = [
+            name for gp_app_label, name in graph_plan if gp_app_label == app_label
+        ][-1]
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(
