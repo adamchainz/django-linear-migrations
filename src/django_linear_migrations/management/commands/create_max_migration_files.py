@@ -64,7 +64,7 @@ class Command(BaseCommand):
         migration_loader = MigrationLoader(
             connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
         )
-        graph_plan = get_graph_plan(loader=migration_loader, app_names=labels)
+        graph_plan = get_graph_plan(loader=migration_loader, app_labels=labels)
         for app_config in first_party_app_configs():
             if labels and app_config.label not in labels:
                 continue

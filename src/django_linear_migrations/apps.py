@@ -62,11 +62,11 @@ def first_party_app_configs() -> Generator[AppConfig, None, None]:
 
 def get_graph_plan(
     loader: MigrationLoader,
-    app_names: Iterable[str] | None = None,
+    app_labels: Iterable[str] | None = None,
 ) -> list[tuple[str, str]]:
     nodes = loader.graph.leaf_nodes()
-    if app_names:
-        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_names]
+    if app_labels:
+        nodes = [key for key in loader.graph.leaf_nodes() if key[0] in app_labels]
     plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
     return plan
 
@@ -137,13 +137,13 @@ def check_max_migration_files(
     migration_loader = MigrationLoader(
         connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
     )
-    app_names = [a.label for a in first_party_app_configs()]
+    app_labels = [a.label for a in first_party_app_configs()]
     conflicts = migration_loader.detect_conflicts()
-    if app_names:
+    if app_labels:
         conflicts = {
             app_label: conflict
             for app_label, conflict in conflicts.items()
-            if app_label in app_names
+            if app_label in app_labels
         }
     if conflicts:
         conflict_msg = "; ".join(
@@ -161,7 +161,7 @@ def check_max_migration_files(
         )
         return errors
 
-    graph_plan = get_graph_plan(loader=migration_loader, app_names=app_names)
+    graph_plan = get_graph_plan(loader=migration_loader, app_labels=app_labels)
     for app_config in first_party_app_configs():
         # When only checking certain apps, skip the others
         if app_configs is not None and app_config not in app_config_set:
