@@ -112,7 +112,7 @@ class CheckMaxMigrationFilesTests(TestCase):
             + " latest migration is '0002_updates'."
         )
 
-    def test_dlm_E000(self):
+    def test_dlm_E005(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration())
         (self.migrations_dir / "custom_name.py").write_text(
@@ -137,7 +137,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
         result = check_max_migration_files()
         assert len(result) == 1
-        assert result[0].id == "dlm.E000"
+        assert result[0].id == "dlm.E005"
         assert (
             result[0].msg
             == "Conflicting migrations detected; multiple leaf nodes"

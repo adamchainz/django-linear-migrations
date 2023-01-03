@@ -149,15 +149,15 @@ def check_max_migration_files(
             if app_label in app_names
         }
     if conflicts:
-        name_str = "; ".join(
+        conflict_msg = "; ".join(
             f"{', '.join(names)} in {app}" for app, names in conflicts.items()
         )
         errors.append(
             Error(
-                id="dlm.E000",
+                id="dlm.E005",
                 msg=(
                     "Conflicting migrations detected;"
-                    + f" multiple leaf nodes in the migration graph: {name_str}."
+                    + f" multiple leaf nodes in the migration graph: {conflict_msg}."
                 ),
                 hint="Run 'python manage.py makemigrations --merge'",
             )
