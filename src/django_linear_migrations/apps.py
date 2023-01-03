@@ -138,13 +138,11 @@ def check_max_migration_files(
         connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
     )
     app_labels = [a.label for a in first_party_app_configs()]
-    conflicts = migration_loader.detect_conflicts()
-    if app_labels:
-        conflicts = {
-            app_label: conflict
-            for app_label, conflict in conflicts.items()
-            if app_label in app_labels
-        }
+    conflicts = {
+        app_label: conflict
+        for app_label, conflict in migration_loader.detect_conflicts().items()
+        if app_label in app_labels
+    }
     if conflicts:
         conflict_msg = "; ".join(
             f"{', '.join(names)} in {app}" for app, names in conflicts.items()
