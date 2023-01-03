@@ -139,20 +139,21 @@ def check_max_migration_files(
     )
     app_labels = [a.label for a in first_party_app_configs()]
     conflicts = {
-        app_label: conflict
-        for app_label, conflict in migration_loader.detect_conflicts().items()
+        app_label: names
+        for app_label, names in migration_loader.detect_conflicts().items()
         if app_label in app_labels
     }
     if conflicts:
-        conflict_msg = "; ".join(
-            f"{', '.join(names)} in {app}" for app, names in conflicts.items()
+        conflict_msg = "".join(
+            f"\n* {app_label}: {', '.join(sorted(names))}"
+            for app_label, names in conflicts.items()
         )
         errors.append(
             Error(
                 id="dlm.E005",
                 msg=(
-                    "Conflicting migrations detected;"
-                    + f" multiple leaf nodes in the migration graph: {conflict_msg}."
+                    "Conflicting migrations detected - multiple leaf nodes "
+                    + f"detected for these apps:{conflict_msg}"
                 ),
                 hint=(
                     "Fix the conflict, e.g. with './manage.py makemigrations --merge'."

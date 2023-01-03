@@ -138,10 +138,10 @@ class CheckMaxMigrationFilesTests(TestCase):
         result = check_max_migration_files()
         assert len(result) == 1
         assert result[0].id == "dlm.E005"
-        assert (
-            result[0].msg
-            == "Conflicting migrations detected; multiple leaf nodes"
-            + " in the migration graph: 0002_updates, custom_name in testapp."
+        assert result[0].msg == (
+            "Conflicting migrations detected - multiple leaf nodes "
+            + "detected for these apps:\n"
+            + "* testapp: 0002_updates, custom_name"
         )
 
     def test_okay(self):
