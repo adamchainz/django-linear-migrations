@@ -2,6 +2,9 @@
 History
 =======
 
+* Use Django’s ``MigrationLoader`` to find the latest migrations.
+  This also means django-linear-migrations operations detect migration conflicts.
+
 2.5.1 (2022-07-20)
 ------------------
 
