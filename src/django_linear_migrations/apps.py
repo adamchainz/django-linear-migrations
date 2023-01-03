@@ -16,8 +16,6 @@ from django.core.checks import Error
 from django.core.checks import register
 from django.core.checks import Tags
 from django.core.signals import setting_changed
-from django.db import connections
-from django.db import DEFAULT_DB_ALIAS
 from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver
 from django.utils.functional import cached_property
@@ -134,9 +132,7 @@ def check_max_migration_files(
     else:
         app_config_set = set()
 
-    migration_loader = MigrationLoader(
-        connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
-    )
+    migration_loader = MigrationLoader(None, ignore_no_migrations=True)
     app_labels = [a.label for a in first_party_app_configs()]
     conflicts = {
         app_label: names

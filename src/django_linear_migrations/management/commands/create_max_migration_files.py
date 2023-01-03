@@ -6,8 +6,6 @@ from typing import Any
 
 from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
-from django.db import connections
-from django.db import DEFAULT_DB_ALIAS
 from django.db.migrations.loader import MigrationLoader
 
 from django_linear_migrations.apps import first_party_app_configs
@@ -61,9 +59,7 @@ class Command(BaseCommand):
             sys.exit(2)
 
         any_created = False
-        migration_loader = MigrationLoader(
-            connections[DEFAULT_DB_ALIAS], ignore_no_migrations=True
-        )
+        migration_loader = MigrationLoader(None, ignore_no_migrations=True)
         graph_plan = get_graph_plan(loader=migration_loader, app_labels=labels)
         for app_config in first_party_app_configs():
             if labels and app_config.label not in labels:
