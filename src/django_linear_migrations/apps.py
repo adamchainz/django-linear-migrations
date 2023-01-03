@@ -154,7 +154,9 @@ def check_max_migration_files(
                     "Conflicting migrations detected;"
                     + f" multiple leaf nodes in the migration graph: {conflict_msg}."
                 ),
-                hint="Run 'python manage.py makemigrations --merge'",
+                hint=(
+                    "Fix the conflict, e.g. with './manage.py makemigrations --merge'."
+                ),
             )
         )
         return errors
