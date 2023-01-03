@@ -58,21 +58,6 @@ def first_party_app_configs() -> Generator[AppConfig, None, None]:
             yield app_config
 
 
-def get_graph_plan(
-    loader: MigrationLoader,
-    app_labels: Iterable[str] | None = None,
-) -> list[tuple[str, str]]:
-    nodes = loader.graph.leaf_nodes()
-    if app_labels:
-        nodes = [
-            (app_label, name)
-            for app_label, name in loader.graph.leaf_nodes()
-            if app_label in app_labels
-        ]
-    plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
-    return plan
-
-
 class MigrationDetails:
     migrations_module_name: str | None
     migrations_module: ModuleType | None
@@ -125,6 +110,20 @@ class MigrationDetails:
             for _, name, is_pkg in pkgutil.iter_modules(path)
             if not is_pkg and name[0] not in "_~"
         }
+
+
+def get_graph_plan(
+    loader: MigrationLoader, app_labels: Iterable[str] | None = None
+) -> list[tuple[str, str]]:
+    nodes = loader.graph.leaf_nodes()
+    if app_labels:
+        nodes = [
+            (app_label, name)
+            for app_label, name in loader.graph.leaf_nodes()
+            if app_label in app_labels
+        ]
+    plan: list[tuple[str, str]] = loader.graph._generate_plan(nodes, at_end=True)
+    return plan
 
 
 def check_max_migration_files(
