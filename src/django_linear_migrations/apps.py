@@ -209,7 +209,7 @@ def check_max_migration_files(
                     id="dlm.E003",
                     msg=(
                         f"{app_label}'s max_migration.txt points to"
-                        + f" non-existent migration '{max_migration_name}'."
+                        + f" non-existent migration {max_migration_name!r}."
                     ),
                     hint=(
                         "Edit the max_migration.txt to contain the latest"
@@ -228,12 +228,12 @@ def check_max_migration_files(
                     id="dlm.E004",
                     msg=(
                         f"{app_label}'s max_migration.txt contains"
-                        + f" '{max_migration_name}', but the latest migration"
-                        + f" is '{real_max_migration_name}'."
+                        + f" {max_migration_name!r}, but the latest migration"
+                        + f" is {real_max_migration_name!r}."
                     ),
                     hint=(
                         "Edit max_migration.txt to contain"
-                        + f" '{real_max_migration_name}' or rearrange the"
+                        + f" {real_max_migration_name!r} or rearrange the"
                         + " migrations into the correct order."
                     ),
                 )
