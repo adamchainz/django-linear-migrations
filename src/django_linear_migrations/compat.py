@@ -22,7 +22,6 @@ if sys.version_info >= (3, 8):
         return ast.Constant(value=value, kind=None)
 
 else:
-
     ast_constant_type = ast.Str
 
     def is_ast_constant_str(node: ast.AST) -> bool:
