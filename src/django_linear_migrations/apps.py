@@ -155,7 +155,8 @@ def check_max_migration_files(
                     + f"detected for these apps:{conflict_msg}"
                 ),
                 hint=(
-                    "Fix the conflict, e.g. with './manage.py makemigrations --merge'."
+                    "Fix the conflict, e.g. with "
+                    + "'./manage.py makemigrations --merge --skip-checks'."
                 ),
             )
         )
