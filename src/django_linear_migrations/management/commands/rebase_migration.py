@@ -175,7 +175,9 @@ class Command(BaseCommand):
             + " updated its dependencies, and updated max_migration.txt."
         )
 
-    def find_migration_names(self, max_migration_lines: list[str]) -> tuple[str, str] | None:
+    def find_migration_names(
+        self, max_migration_lines: list[str]
+    ) -> tuple[str, str] | None:
         lines = max_migration_lines
         if len(lines) <= 1:
             return None

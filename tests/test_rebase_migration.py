@@ -431,11 +431,15 @@ class FindMigrationNamesTests(SimpleTestCase):
         assert result is None
 
     def test_none_when_no_first_marker(self):
-        result = module.Command().find_migration_names(["not_a_marker", "0002_author_nicknames"])
+        result = module.Command().find_migration_names(
+            ["not_a_marker", "0002_author_nicknames"]
+        )
         assert result is None
 
     def test_none_when_no_second_marker(self):
-        result = module.Command().find_migration_names(["<<<<<<<", "0002_author_nicknames"])
+        result = module.Command().find_migration_names(
+            ["<<<<<<<", "0002_author_nicknames"]
+        )
         assert result is None
 
     def test_works_with_two_way_merge(self):
