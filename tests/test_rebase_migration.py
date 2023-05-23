@@ -427,19 +427,19 @@ class RebaseMigrationsTests(TestCase):
 
 class FindMigrationNamesTests(SimpleTestCase):
     def test_none_when_no_lines(self):
-        result = module.find_migration_names([])
+        result = module.Command().find_migration_names([])
         assert result is None
 
     def test_none_when_no_first_marker(self):
-        result = module.find_migration_names(["not_a_marker", "0002_author_nicknames"])
+        result = module.Command().find_migration_names(["not_a_marker", "0002_author_nicknames"])
         assert result is None
 
     def test_none_when_no_second_marker(self):
-        result = module.find_migration_names(["<<<<<<<", "0002_author_nicknames"])
+        result = module.Command().find_migration_names(["<<<<<<<", "0002_author_nicknames"])
         assert result is None
 
     def test_works_with_two_way_merge(self):
-        result = module.find_migration_names(
+        result = module.Command().find_migration_names(
             [
                 "<<<<<<<",
                 "0002_author_nicknames",
@@ -451,7 +451,7 @@ class FindMigrationNamesTests(SimpleTestCase):
         assert result == ("0002_author_nicknames", "0002_longer_titles")
 
     def test_works_with_three_way_merge(self):
-        result = module.find_migration_names(
+        result = module.Command().find_migration_names(
             [
                 "<<<<<<<",
                 "0002_author_nicknames",
