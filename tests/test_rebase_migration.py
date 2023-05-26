@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 import sys
 import time
 from functools import partial
@@ -427,23 +428,19 @@ class RebaseMigrationsTests(TestCase):
 
 class FindMigrationNamesTests(SimpleTestCase):
     def test_none_when_no_lines(self):
-        result = module.Command().find_migration_names([])
+        result = module.find_migration_names([])
         assert result is None
 
     def test_none_when_no_first_marker(self):
-        result = module.Command().find_migration_names(
-            ["not_a_marker", "0002_author_nicknames"]
-        )
+        result = module.find_migration_names(["not_a_marker", "0002_author_nicknames"])
         assert result is None
 
     def test_none_when_no_second_marker(self):
-        result = module.Command().find_migration_names(
-            ["<<<<<<<", "0002_author_nicknames"]
-        )
+        result = module.find_migration_names(["<<<<<<<", "0002_author_nicknames"])
         assert result is None
 
-    def test_works_with_two_way_merge(self):
-        result = module.Command().find_migration_names(
+    def test_works_with_two_way_merge_during_rebase(self):
+        result = module.find_migration_names(
             [
                 "<<<<<<<",
                 "0002_author_nicknames",
@@ -454,8 +451,8 @@ class FindMigrationNamesTests(SimpleTestCase):
         )
         assert result == ("0002_author_nicknames", "0002_longer_titles")
 
-    def test_works_with_three_way_merge(self):
-        result = module.Command().find_migration_names(
+    def test_works_with_three_way_merge_during_rebase(self):
+        result = module.find_migration_names(
             [
                 "<<<<<<<",
                 "0002_author_nicknames",
@@ -467,6 +464,104 @@ class FindMigrationNamesTests(SimpleTestCase):
             ]
         )
         assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+    def test_works_with_two_way_merge_during_merge(self):
+        with mock.patch.object(module, "is_merge_in_progress", return_value=True):
+            result = module.find_migration_names(
+                [
+                    "<<<<<<<",
+                    "0002_longer_titles",
+                    "=======",
+                    "0002_author_nicknames",
+                    ">>>>>>>",
+                ]
+            )
+        assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+    def test_works_with_three_way_merge_during_merge(self):
+        with mock.patch.object(module, "is_merge_in_progress", return_value=True):
+            result = module.find_migration_names(
+                [
+                    "<<<<<<<",
+                    "0002_longer_titles",
+                    "|||||||",
+                    "0001_initial",
+                    "=======",
+                    "0002_author_nicknames",
+                    ">>>>>>>",
+                ]
+            )
+        assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+
+class IsMergeInProgressTests(SimpleTestCase):
+    git_command = ["git", "rev-parse", "--git-dir"]
+
+    def setUp(self) -> None:
+        subprocess_run_patch = mock.patch(
+            "django_linear_migrations.management.commands.rebase_migration"
+            ".subprocess.run"
+        )
+        self.mock_subprocess_run = subprocess_run_patch.start()
+
+        self.addCleanup(subprocess_run_patch.stop)
+
+    @pytest.fixture(autouse=True)
+    def tmp_path_fixture(self, tmp_path):
+        git_dir_name = ".git" + str(time.time()).replace(".", "")
+        self.git_dir_path = tmp_path / git_dir_name
+        self.git_dir_path.mkdir()
+
+    def test_true_when_git_repository_exists_and_merge_in_progress(self):
+        with open(self.git_dir_path.joinpath("MERGE_HEAD"), "w"):
+            pass
+        self.mock_subprocess_run.return_value = subprocess.CompletedProcess(
+            args=self.git_command,
+            returncode=0,
+            stdout=str(self.git_dir_path),
+        )
+
+        result = module.is_merge_in_progress()
+
+        assert result is True
+        self.mock_subprocess_run.assert_called_once_with(
+            self.git_command,
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+
+    def test_false_when_git_repository_exists_and_not_merge_in_progress(self):
+        self.mock_subprocess_run.return_value = subprocess.CompletedProcess(
+            args=self.git_command,
+            returncode=0,
+            stdout=str(self.git_dir_path),
+        )
+
+        result = module.is_merge_in_progress()
+
+        assert result is False
+
+    def test_false_when_repository_not_exists(self):
+        # subprocess.run raises SubprocessError with 128 code when there is
+        # no git repository
+        self.mock_subprocess_run.side_effect = subprocess.SubprocessError(
+            f"Command '{self.git_command}' returned non-zero exit status 128"
+        )
+
+        result = module.is_merge_in_progress()
+
+        assert result is False
+
+    def test_false_when_git_command_is_not_available(self):
+        # subprocess.run raises FailNotFound error when `git` command is not found
+        self.mock_subprocess_run.side_effect = FileNotFoundError(
+            "No such file or directory: 'git'"
+        )
+
+        result = module.is_merge_in_progress()
+
+        assert result is False
 
 
 class MigrationAppliedTests(TestCase):

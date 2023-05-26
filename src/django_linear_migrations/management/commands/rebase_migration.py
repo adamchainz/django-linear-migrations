@@ -50,7 +50,7 @@ class Command(BaseCommand):
         if not max_migration_txt.exists():
             raise CommandError(f"{app_label} does not have a max_migration.txt.")
 
-        migration_names = self.find_migration_names(
+        migration_names = find_migration_names(
             max_migration_txt.read_text().splitlines()
         )
         if migration_names is None:
@@ -175,17 +175,36 @@ class Command(BaseCommand):
             + " updated its dependencies, and updated max_migration.txt."
         )
 
-    def find_migration_names(
-        self, max_migration_lines: list[str]
-    ) -> tuple[str, str] | None:
-        lines = max_migration_lines
-        if len(lines) <= 1:
-            return None
-        if not lines[0].startswith("<<<<<<<"):
-            return None
-        if not lines[-1].startswith(">>>>>>>"):
-            return None
-        return lines[1].strip(), lines[-2].strip()
+
+def find_migration_names(max_migration_lines: list[str]) -> tuple[str, str] | None:
+    lines = max_migration_lines
+    if len(lines) <= 1:
+        return None
+    if not lines[0].startswith("<<<<<<<"):
+        return None
+    if not lines[-1].startswith(">>>>>>>"):
+        return None
+    migration_names = (lines[1].strip(), lines[-2].strip())
+    if is_merge_in_progress():
+        # During the merge 'ours' and 'theirs' are swapped in comparison with rebase
+        migration_names = (migration_names[1], migration_names[0])
+    return migration_names
+
+
+def is_merge_in_progress() -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        # Either `git` is not available or there is no git repository
+        return False
+
+    git_dir = result.stdout.strip()
+    return Path(git_dir).joinpath("MERGE_HEAD").exists()
 
 
 def migration_applied(app_label: str, migration_name: str) -> bool:
