@@ -200,7 +200,8 @@ def is_merge_in_progress() -> bool:
             text=True,
         )
     except (FileNotFoundError, subprocess.SubprocessError):
-        # Either `git` is not available or there is no git repository
+        # Either `git` is not available or there is no git repository, fall back to
+        # default behaviour
         return False
 
     git_dir = result.stdout.strip()

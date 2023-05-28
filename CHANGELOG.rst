@@ -2,6 +2,11 @@
 Changelog
 =========
 
+2.8.0 (2023-05-28)
+------------------
+
+* Improve `rebase_migration` command to handle both rebasing and merging of the base branch
+
 2.7.0 (2023-02-25)
 ------------------
 
