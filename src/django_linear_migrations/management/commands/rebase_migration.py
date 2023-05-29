@@ -184,7 +184,29 @@ def find_migration_names(max_migration_lines: list[str]) -> tuple[str, str] | No
         return None
     if not lines[-1].startswith(">>>>>>>"):
         return None
-    return lines[1].strip(), lines[-2].strip()
+    migration_names = (lines[1].strip(), lines[-2].strip())
+    if is_merge_in_progress():
+        # During the merge 'ours' and 'theirs' are swapped in comparison with rebase
+        migration_names = (migration_names[1], migration_names[0])
+    return migration_names
+
+
+def is_merge_in_progress() -> bool:
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--verify", "MERGE_HEAD"],
+            capture_output=True,
+            check=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.SubprocessError):
+        # Either:
+        # - `git` is not available, or broken
+        # - there is no git repository
+        # - no merge head exists, so assume rebasing
+        return False
+    # Merged head exists, we are merging
+    return True
 
 
 def migration_applied(app_label: str, migration_name: str) -> bool:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import subprocess
 import sys
 import time
 from functools import partial
@@ -438,7 +440,7 @@ class FindMigrationNamesTests(SimpleTestCase):
         result = module.find_migration_names(["<<<<<<<", "0002_author_nicknames"])
         assert result is None
 
-    def test_works_with_two_way_merge(self):
+    def test_works_with_two_way_merge_during_rebase(self):
         result = module.find_migration_names(
             [
                 "<<<<<<<",
@@ -450,7 +452,7 @@ class FindMigrationNamesTests(SimpleTestCase):
         )
         assert result == ("0002_author_nicknames", "0002_longer_titles")
 
-    def test_works_with_three_way_merge(self):
+    def test_works_with_three_way_merge_during_rebase(self):
         result = module.find_migration_names(
             [
                 "<<<<<<<",
@@ -463,6 +465,73 @@ class FindMigrationNamesTests(SimpleTestCase):
             ]
         )
         assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+    def test_works_with_two_way_merge_during_merge(self):
+        with mock.patch.object(module, "is_merge_in_progress", return_value=True):
+            result = module.find_migration_names(
+                [
+                    "<<<<<<<",
+                    "0002_longer_titles",
+                    "=======",
+                    "0002_author_nicknames",
+                    ">>>>>>>",
+                ]
+            )
+        assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+    def test_works_with_three_way_merge_during_merge(self):
+        with mock.patch.object(module, "is_merge_in_progress", return_value=True):
+            result = module.find_migration_names(
+                [
+                    "<<<<<<<",
+                    "0002_longer_titles",
+                    "|||||||",
+                    "0001_initial",
+                    "=======",
+                    "0002_author_nicknames",
+                    ">>>>>>>",
+                ]
+            )
+        assert result == ("0002_author_nicknames", "0002_longer_titles")
+
+
+class IsMergeInProgressTests(SimpleTestCase):
+    @pytest.fixture(autouse=True)
+    def tmp_path_fixture(self, tmp_path):
+        self.tmp_path = tmp_path
+        self.subprocess_run = partial(subprocess.run, cwd=tmp_path, check=True)
+
+    def setUp(self):
+        orig = os.getcwd()
+        os.chdir(self.tmp_path)
+        self.addCleanup(os.chdir, orig)
+
+    def test_no_git_command(self):
+        with mock.patch.dict(os.environ, {"PATH": ""}):
+            result = module.is_merge_in_progress()
+        assert result is False
+
+    def test_no_git_dir(self):
+        result = module.is_merge_in_progress()
+        assert result is False
+
+    def test_git_dir_no_merge(self):
+        self.subprocess_run(["git", "init"])
+        result = module.is_merge_in_progress()
+        assert result is False
+
+    def test_git_dir_merge(self):
+        self.subprocess_run(["git", "init", "-b", "main"])
+        self.subprocess_run(["git", "config", "user.email", "hacker@example.com"])
+        self.subprocess_run(["git", "config", "user.name", "A Hacker"])
+        self.subprocess_run(["git", "commit", "--allow-empty", "-m", "A"])
+        self.subprocess_run(["git", "switch", "--orphan", "other"])
+        self.subprocess_run(["git", "commit", "--allow-empty", "-m", "B"])
+        self.subprocess_run(
+            ["git", "merge", "--no-commit", "--allow-unrelated-histories", "main"]
+        )
+        result = module.is_merge_in_progress()
+        assert result is True
 
 
 class MigrationAppliedTests(TestCase):
