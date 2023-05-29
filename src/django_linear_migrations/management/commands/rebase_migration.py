@@ -193,19 +193,20 @@ def find_migration_names(max_migration_lines: list[str]) -> tuple[str, str] | No
 
 def is_merge_in_progress() -> bool:
     try:
-        result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
+        subprocess.run(
+            ["git", "rev-parse", "--verify", "MERGE_HEAD"],
             capture_output=True,
             check=True,
             text=True,
         )
     except (FileNotFoundError, subprocess.SubprocessError):
-        # Either `git` is not available or there is no git repository, fall back to
-        # default behaviour
+        # Either:
+        # - `git` is not available, or broken
+        # - there is no git repository
+        # - no merge head exists, so assume rebasing
         return False
-
-    git_dir = result.stdout.strip()
-    return Path(git_dir).joinpath("MERGE_HEAD").exists()
+    # Merged head exists, we are merging
+    return True
 
 
 def migration_applied(app_label: str, migration_name: str) -> bool:
