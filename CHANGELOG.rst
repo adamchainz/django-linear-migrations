@@ -2,10 +2,7 @@
 Changelog
 =========
 
-2.8.0 (2023-05-28)
-------------------
-
-* Improve `rebase_migration` command to handle both rebasing and merging of the base branch
+* Extend ``rebase_migration`` to detect Git in-progress merges and select the correct migration to rebase.
 
 2.7.0 (2023-02-25)
 ------------------
