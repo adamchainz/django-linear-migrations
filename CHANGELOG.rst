@@ -2,6 +2,9 @@
 Changelog
 =========
 
+2.8.0 (2023-05-30)
+------------------
+
 * Extend ``rebase_migration`` to detect Git in-progress merges and select the correct migration to rebase.
 
   Thanks to Dmitry Sleptsov in `PR #260 <https://github.com/adamchainz/django-linear-migrations/pull/260>`__.
