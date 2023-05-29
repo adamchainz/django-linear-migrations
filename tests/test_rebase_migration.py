@@ -522,6 +522,8 @@ class IsMergeInProgressTests(SimpleTestCase):
 
     def test_git_dir_merge(self):
         self.subprocess_run(["git", "init", "-b", "main"])
+        self.subprocess_run(["git", "config", "user.email", "hacker@example.com"])
+        self.subprocess_run(["git", "config", "user.name", "A Hacker"])
         self.subprocess_run(["git", "commit", "--allow-empty", "-m", "A"])
         self.subprocess_run(["git", "switch", "--orphan", "other"])
         self.subprocess_run(["git", "commit", "--allow-empty", "-m", "B"])
