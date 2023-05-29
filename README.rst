@@ -149,15 +149,20 @@ Following a conflicted “rebase” operation in Git, run it with the name of th
 
     $ python manage.py rebase_migration <app_label>
 
-The command will use the conflict information in the ``max_migration.txt`` file to determine which migration to rebase.
-It will automatically detect whether it's a merge or rebase operation by checking for the existence of the ``MERGE_HEAD`` file in the ``.git`` directory.
-The command then rename the migration, edit it to depend on the new migration in your main branch, and update ``max_migration.txt``.
-If Black is installed, it will format the updated migration file with it, like Django’s built-in migration commands (from version 4.1+).
+The command uses the conflict information in the ``max_migration.txt`` file to determine which migration to rebase.
+It automatically detects whether a Git merge or rebase operation is in progress, assuming rebase if a Git repository cannot be found.
+The command then:
+
+1. renames the migration
+2. edits it to depend on the new migration from your main branch
+3. updates ``max_migration.txt``.
+
+If Black is installed, the command formats the updated migration file with it, like Django’s built-in migration commands do (from version 4.1+).
 See below for some examples and caveats.
 
 Note rebasing the migration might not always be the *correct* thing to do.
-If the migrations in main and feature branches have both affected the same models, rebasing the migration to the end may not make sense.
-However, such parallel changes would *normally* cause conflicts in your models files or other parts of the source code as well.
+If the migrations in your main and feature branches have both affected the same models, rebasing the migration to the end may not make sense.
+However, such parallel changes would *normally* cause conflicts in your model files or other parts of the source code as well.
 
 Worked Example
 ^^^^^^^^^^^^^^
