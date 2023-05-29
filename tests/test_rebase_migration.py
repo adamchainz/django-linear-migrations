@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -495,73 +496,40 @@ class FindMigrationNamesTests(SimpleTestCase):
 
 
 class IsMergeInProgressTests(SimpleTestCase):
-    git_command = ["git", "rev-parse", "--git-dir"]
-
-    def setUp(self) -> None:
-        subprocess_run_patch = mock.patch(
-            "django_linear_migrations.management.commands.rebase_migration"
-            ".subprocess.run"
-        )
-        self.mock_subprocess_run = subprocess_run_patch.start()
-
-        self.addCleanup(subprocess_run_patch.stop)
-
     @pytest.fixture(autouse=True)
     def tmp_path_fixture(self, tmp_path):
-        git_dir_name = ".git" + str(time.time()).replace(".", "")
-        self.git_dir_path = tmp_path / git_dir_name
-        self.git_dir_path.mkdir()
+        self.tmp_path = tmp_path
+        self.subprocess_run = partial(subprocess.run, cwd=tmp_path, check=True)
 
-    def test_true_when_git_repository_exists_and_merge_in_progress(self):
-        with open(self.git_dir_path.joinpath("MERGE_HEAD"), "w"):
-            pass
-        self.mock_subprocess_run.return_value = subprocess.CompletedProcess(
-            args=self.git_command,
-            returncode=0,
-            stdout=str(self.git_dir_path),
-        )
+    def setUp(self):
+        orig = os.getcwd()
+        os.chdir(self.tmp_path)
+        self.addCleanup(os.chdir, orig)
 
+    def test_no_git_command(self):
+        with mock.patch.dict(os.environ, {"PATH": ""}):
+            result = module.is_merge_in_progress()
+        assert result is False
+
+    def test_no_git_dir(self):
         result = module.is_merge_in_progress()
+        assert result is False
 
+    def test_git_dir_no_merge(self):
+        self.subprocess_run(["git", "init"])
+        result = module.is_merge_in_progress()
+        assert result is False
+
+    def test_git_dir_merge(self):
+        self.subprocess_run(["git", "init", "-b", "main"])
+        self.subprocess_run(["git", "commit", "--allow-empty", "-m", "A"])
+        self.subprocess_run(["git", "switch", "--orphan", "other"])
+        self.subprocess_run(["git", "commit", "--allow-empty", "-m", "B"])
+        self.subprocess_run(
+            ["git", "merge", "--no-commit", "--allow-unrelated-histories", "main"]
+        )
+        result = module.is_merge_in_progress()
         assert result is True
-        self.mock_subprocess_run.assert_called_once_with(
-            self.git_command,
-            capture_output=True,
-            check=True,
-            text=True,
-        )
-
-    def test_false_when_git_repository_exists_and_not_merge_in_progress(self):
-        self.mock_subprocess_run.return_value = subprocess.CompletedProcess(
-            args=self.git_command,
-            returncode=0,
-            stdout=str(self.git_dir_path),
-        )
-
-        result = module.is_merge_in_progress()
-
-        assert result is False
-
-    def test_false_when_repository_not_exists(self):
-        # subprocess.run raises SubprocessError with 128 code when there is
-        # no git repository
-        self.mock_subprocess_run.side_effect = subprocess.SubprocessError(
-            f"Command '{self.git_command}' returned non-zero exit status 128"
-        )
-
-        result = module.is_merge_in_progress()
-
-        assert result is False
-
-    def test_false_when_git_command_is_not_available(self):
-        # subprocess.run raises FailNotFound error when `git` command is not found
-        self.mock_subprocess_run.side_effect = FileNotFoundError(
-            "No such file or directory: 'git'"
-        )
-
-        result = module.is_merge_in_progress()
-
-        assert result is False
 
 
 class MigrationAppliedTests(TestCase):
