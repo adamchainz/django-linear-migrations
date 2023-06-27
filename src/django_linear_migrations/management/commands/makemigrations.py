@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import django
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations import Migration
 
@@ -8,8 +9,15 @@ from django_linear_migrations.apps import MigrationDetails
 
 
 class Command(BaseCommand):
-    def write_migration_files(self, changes: dict[str, list[Migration]]) -> None:
-        super().write_migration_files(changes)
+    def write_migration_files(
+        self,
+        changes: dict[str, list[Migration]],
+        update_previous_migration_paths: dict[str, str] | None = None,
+    ) -> None:
+        if django.VERSION >= (4, 2, 0):
+            super().write_migration_files(changes, update_previous_migration_paths)
+        else:
+            super().write_migration_files(changes)
         if self.dry_run:
             return
 

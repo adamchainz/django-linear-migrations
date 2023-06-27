@@ -5,7 +5,10 @@ import time
 from functools import partial
 from textwrap import dedent
 
+import django
+import unittest
 import pytest
+from django.db import models
 from django.test import override_settings
 from django.test import TestCase
 
@@ -42,6 +45,22 @@ class MakeMigrationsTests(TestCase):
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         assert max_migration_txt.read_text() == "0001_initial\n"
+
+    @unittest.skipUnless(django.VERSION >= (4, 2, 0), "--update kwarg was added in 4.2")
+    def test_update(self):
+        self.call_command("testapp")
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert max_migration_txt.read_text() == "0001_initial\n"
+
+        class TestUpdateModel(models.Model):
+
+            class Meta:
+                app_label = "testapp"
+
+        out, err, returncode = self.call_command("--update", "testapp")
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert max_migration_txt.read_text() == "0001_initial_updated\n"
 
     def test_creates_max_migration_txt_given_name(self):
         out, err, returncode = self.call_command("testapp", "--name", "brand_new")
