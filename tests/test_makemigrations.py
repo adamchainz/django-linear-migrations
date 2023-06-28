@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import sys
 import time
+import unittest
 from functools import partial
 from textwrap import dedent
 
 import django
-import unittest
 import pytest
 from django.db import models
 from django.test import override_settings
@@ -53,7 +53,6 @@ class MakeMigrationsTests(TestCase):
         assert max_migration_txt.read_text() == "0001_initial\n"
 
         class TestUpdateModel(models.Model):
-
             class Meta:
                 app_label = "testapp"
 
