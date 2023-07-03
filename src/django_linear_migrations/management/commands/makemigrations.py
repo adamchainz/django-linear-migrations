@@ -14,7 +14,7 @@ class Command(BaseCommand):
         changes: dict[str, list[Migration]],
         update_previous_migration_paths: dict[str, str] | None = None,
     ) -> None:
-        if django.VERSION >= (4, 2, 0):
+        if django.VERSION >= (4, 2):
             super().write_migration_files(changes, update_previous_migration_paths)
         else:
             super().write_migration_files(changes)
