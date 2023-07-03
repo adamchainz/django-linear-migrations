@@ -2,6 +2,9 @@
 Changelog
 =========
 
+2.10.0 (2023-07-03)
+-------------------
+
 * Support Django 4.2’s ``--update`` option for ``makemigrations``.
 
   Thanks to Elliott Omosheye in `PR #270 <https://github.com/adamchainz/django-linear-migrations/pull/270>`__.
