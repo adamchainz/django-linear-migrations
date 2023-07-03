@@ -9,28 +9,47 @@ from django_linear_migrations.apps import MigrationDetails
 
 
 class Command(BaseCommand):
-    def write_migration_files(
-        self,
-        changes: dict[str, list[Migration]],
-        update_previous_migration_paths: dict[str, str] | None = None,
-    ) -> None:
-        if django.VERSION >= (4, 2):
-            super().write_migration_files(changes, update_previous_migration_paths)
-        else:
+    if django.VERSION >= (4, 2):
+
+        def write_migration_files(
+            self,
+            changes: dict[str, list[Migration]],
+            update_previous_migration_paths: dict[str, str] | None = None,
+        ) -> None:
+            # django-stubs awaiting new signature:
+            # https://github.com/typeddjango/django-stubs/pull/1609
+            super().write_migration_files(  # type: ignore[call-arg]
+                changes,
+                update_previous_migration_paths,
+            )
+            _post_write_migration_files(self.dry_run, changes)
+
+    else:
+
+        def write_migration_files(  # type: ignore[misc]
+            self,
+            changes: dict[str, list[Migration]],
+        ) -> None:
             super().write_migration_files(changes)
-        if self.dry_run:
-            return
+            _post_write_migration_files(self.dry_run, changes)
 
-        first_party_app_labels = {
-            app_config.label for app_config in first_party_app_configs()
-        }
 
-        for app_label, app_migrations in changes.items():
-            if app_label not in first_party_app_labels:
-                continue
+def _post_write_migration_files(
+    dry_run: bool, changes: dict[str, list[Migration]]
+) -> None:
+    if dry_run:
+        return
 
-            # Reload required as we've generated changes
-            migration_details = MigrationDetails(app_label, do_reload=True)
-            max_migration_name = app_migrations[-1].name
-            max_migration_txt = migration_details.dir / "max_migration.txt"
-            max_migration_txt.write_text(max_migration_name + "\n")
+    first_party_app_labels = {
+        app_config.label for app_config in first_party_app_configs()
+    }
+
+    for app_label, app_migrations in changes.items():
+        if app_label not in first_party_app_labels:
+            continue
+
+        # Reload required as we've generated changes
+        migration_details = MigrationDetails(app_label, do_reload=True)
+        max_migration_name = app_migrations[-1].name
+        max_migration_txt = migration_details.dir / "max_migration.txt"
+        max_migration_txt.write_text(max_migration_name + "\n")
