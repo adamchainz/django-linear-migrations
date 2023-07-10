@@ -468,8 +468,6 @@ else:
             elif value is ...:
                 self.write("...")
             else:
-                if t.kind == "u":
-                    self.write("u")
                 self._write_constant(t.value)
 
         @no_type_check
