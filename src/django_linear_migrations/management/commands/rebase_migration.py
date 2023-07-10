@@ -17,11 +17,7 @@ from django.db.migrations.recorder import MigrationRecorder
 
 from django_linear_migrations.apps import is_first_party_app_config
 from django_linear_migrations.apps import MigrationDetails
-from django_linear_migrations.compat import ast_constant_type
 from django_linear_migrations.compat import ast_unparse
-from django_linear_migrations.compat import get_ast_constant_str_value
-from django_linear_migrations.compat import is_ast_constant_str
-from django_linear_migrations.compat import make_ast_constant_str
 
 
 class Command(BaseCommand):
@@ -121,22 +117,26 @@ class Command(BaseCommand):
             if (
                 not isinstance(dependency, (ast.Tuple, ast.List))
                 or len(dependency.elts) != 2
-                or not all(is_ast_constant_str(el) for el in dependency.elts)
+                or not all(
+                    isinstance(el, ast.Constant) and isinstance(el.value, str)
+                    for el in dependency.elts
+                )
             ):
                 new_dependencies.elts.append(dependency)
                 continue
 
             dependency_app_label_node = dependency.elts[0]
-            assert isinstance(dependency_app_label_node, ast_constant_type)
-            dependency_app_label = get_ast_constant_str_value(dependency_app_label_node)
+            assert isinstance(dependency_app_label_node, ast.Constant)
+            dependency_app_label = dependency_app_label_node.value
+            assert isinstance(dependency_app_label, str)
 
             if dependency_app_label == app_label:
                 num_this_app_dependencies += 1
                 new_dependencies.elts.append(
                     ast.Tuple(
                         elts=[
-                            make_ast_constant_str(app_label),
-                            make_ast_constant_str(merged_migration_name),
+                            ast.Constant(app_label),
+                            ast.Constant(merged_migration_name),
                         ]
                     )
                 )
