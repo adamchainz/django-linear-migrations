@@ -5,34 +5,6 @@ import io
 import sys
 from typing import no_type_check
 
-if sys.version_info >= (3, 8):
-    # Bridge the change from ast.Str to ast.Constant
-
-    ast_constant_type = ast.Constant
-
-    def is_ast_constant_str(node: ast.AST) -> bool:
-        return isinstance(node, ast.Constant) and isinstance(node.value, str)
-
-    def get_ast_constant_str_value(node: ast.Constant) -> str:
-        value = node.value
-        assert isinstance(value, str)
-        return value
-
-    def make_ast_constant_str(value: str) -> ast.Constant:
-        return ast.Constant(value=value, kind=None)
-
-else:
-    ast_constant_type = ast.Str
-
-    def is_ast_constant_str(node: ast.AST) -> bool:
-        return isinstance(node, ast.Str)
-
-    def get_ast_constant_str_value(node: ast.Str) -> str:
-        return node.s
-
-    def make_ast_constant_str(value: str) -> ast.Str:
-        return ast.Str(s=value)
-
 
 if sys.version_info >= (3, 9):
     ast_unparse = ast.unparse
@@ -496,8 +468,6 @@ else:
             elif value is ...:
                 self.write("...")
             else:
-                if t.kind == "u":
-                    self.write("u")
                 self._write_constant(t.value)
 
         @no_type_check
