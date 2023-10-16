@@ -22,19 +22,18 @@ Ensure your migration history is linear.
 
 For a bit of background, see the `introductory blog post <https://adamj.eu/tech/2020/12/10/introducing-django-linear-migrations/>`__.
 
+----
+
+**Work smarter and faster** with my book `Boost Your Django DX <https://adamchainz.gumroad.com/l/byddx>`__ which covers django-linear-migrations and many other tools to improve your development experience.
+
+----
+
 Requirements
 ============
 
 Python 3.8 to 3.12 supported.
 
 Django 3.2 to 5.0 supported.
-
-----
-
-**Want to work smarter and faster?**
-Check out my book `Boost Your Django DX <https://adamchainz.gumroad.com/l/byddx>`__ which covers django-linear-migrations and many other tools to improve your development experience.
-
-----
 
 Installation
 ============
