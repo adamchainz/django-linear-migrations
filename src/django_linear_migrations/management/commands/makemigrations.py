@@ -18,7 +18,7 @@ class Command(BaseCommand):
         ) -> None:
             # django-stubs awaiting new signature:
             # https://github.com/typeddjango/django-stubs/pull/1609
-            super().write_migration_files(  # type: ignore[call-arg]
+            super().write_migration_files(
                 changes,
                 update_previous_migration_paths,
             )
@@ -26,7 +26,7 @@ class Command(BaseCommand):
 
     else:
 
-        def write_migration_files(  # type: ignore[misc]
+        def write_migration_files(  # type: ignore[misc,override]
             self,
             changes: dict[str, list[Migration]],
         ) -> None:
