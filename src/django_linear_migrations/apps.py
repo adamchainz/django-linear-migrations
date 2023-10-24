@@ -1,13 +1,11 @@
-from __future__ import annotations
-
 import pkgutil
 from functools import lru_cache
 from importlib import import_module
 from importlib import reload
 from pathlib import Path
 from types import ModuleType
-from typing import Generator
 from typing import Iterable
+from typing import Iterator
 
 from django.apps import AppConfig
 from django.apps import apps
@@ -52,7 +50,7 @@ def is_first_party_app_config(app_config: AppConfig) -> bool:
     return "site-packages" not in path.parts and "dist-packages" not in path.parts
 
 
-def first_party_app_configs() -> Generator[AppConfig, None, None]:
+def first_party_app_configs() -> Iterator[AppConfig]:
     for app_config in apps.get_app_configs():
         if is_first_party_app_config(app_config):
             yield app_config
