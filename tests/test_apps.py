@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from django.apps import apps
 from django.test import SimpleTestCase
 from django.test.utils import override_settings

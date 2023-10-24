@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 SECRET_KEY = "NOTASECRET"
 
 DATABASES = {

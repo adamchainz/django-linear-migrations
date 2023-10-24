@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import django
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations import Migration
