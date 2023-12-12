@@ -771,7 +771,7 @@ else:
                         first = False
                     else:
                         self.write(", ")
-                    self.dispatch(a),
+                    self.dispatch(a)
                     if d:
                         self.write("=")
                         self.dispatch(d)
