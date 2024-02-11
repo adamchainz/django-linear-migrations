@@ -12,9 +12,9 @@ import pytest
 from django.core.management import CommandError
 from django.db import connection
 from django.db.migrations.recorder import MigrationRecorder
-from django.test import override_settings
 from django.test import SimpleTestCase
 from django.test import TestCase
+from django.test import override_settings
 
 from django_linear_migrations.management.commands import rebase_migration as module
 from tests.utils import empty_migration

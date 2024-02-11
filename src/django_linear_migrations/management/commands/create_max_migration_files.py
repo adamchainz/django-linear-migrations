@@ -8,9 +8,9 @@ from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations.loader import MigrationLoader
 
+from django_linear_migrations.apps import MigrationDetails
 from django_linear_migrations.apps import first_party_app_configs
 from django_linear_migrations.apps import get_graph_plan
-from django_linear_migrations.apps import MigrationDetails
 
 
 class Command(BaseCommand):

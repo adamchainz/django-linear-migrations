@@ -13,8 +13,8 @@ from django.apps import AppConfig
 from django.apps import apps
 from django.conf import settings
 from django.core.checks import Error
-from django.core.checks import register
 from django.core.checks import Tags
+from django.core.checks import register
 from django.core.signals import setting_changed
 from django.db.migrations.loader import MigrationLoader
 from django.dispatch import receiver

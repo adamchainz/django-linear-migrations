@@ -5,7 +5,6 @@ import io
 import sys
 from typing import no_type_check
 
-
 if sys.version_info >= (3, 9):
     ast_unparse = ast.unparse
 else:

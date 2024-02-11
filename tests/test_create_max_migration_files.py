@@ -7,8 +7,8 @@ from textwrap import dedent
 
 import pytest
 from django.core.management import call_command
-from django.test import override_settings
 from django.test import TestCase
+from django.test import override_settings
 
 from tests.utils import empty_migration
 
