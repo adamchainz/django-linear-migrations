@@ -52,7 +52,7 @@ def is_first_party_app_config(app_config: AppConfig) -> bool:
     return "site-packages" not in path.parts and "dist-packages" not in path.parts
 
 
-def first_party_app_configs() -> Generator[AppConfig, None, None]:
+def first_party_app_configs() -> Generator[AppConfig]:
     for app_config in apps.get_app_configs():
         if is_first_party_app_config(app_config):
             yield app_config
