@@ -368,6 +368,66 @@ class RebaseMigrationsTests(TestCase):
             """
         )
 
+    def test_success_with_rebasing_multiple_migrations(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_second.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = [
+                    ('testapp', '0001_initial'),
+                ]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "0003_longer_titles.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = [
+                    ('testapp', '0002_second'),
+                ]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        max_migration_txt.write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_second
+            0003_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+
+        out, err, returncode = self.call_command("testapp")
+
+        assert out == (
+            "Renamed 0002_second.py to 0003_second.py,"
+            + " updated its dependencies, and updated max_migration.txt.\n"
+            + "Renamed 0003_longer_titles.py to 0004_longer_titles.py,"
+            + " updated its dependencies, and updated max_migration.txt.\n"
+        )
+        assert err == ""
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert max_migration_txt.read_text() == "0003_second\n0004_longer_titles\n"
+
+        assert not (self.migrations_dir / "0002_second.py").exists()
+        assert not (self.migrations_dir / "0003_longer_titles.py").exists()
+
     def test_success_swappable_dependency(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
@@ -429,70 +489,115 @@ class RebaseMigrationsTests(TestCase):
 
 class FindMigrationNamesTests(SimpleTestCase):
     def test_none_when_no_lines(self):
-        result = module.find_migration_names([])
+        result = module.find_migration_names("")
         assert result is None
 
     def test_none_when_no_first_marker(self):
-        result = module.find_migration_names(["not_a_marker", "0002_author_nicknames"])
+        result = module.find_migration_names("not_a_marker\n0002_author_nicknames")
         assert result is None
 
     def test_none_when_no_second_marker(self):
-        result = module.find_migration_names(["<<<<<<<", "0002_author_nicknames"])
+        result = module.find_migration_names("<<<<<<<\n0002_author_nicknames")
         assert result is None
 
     def test_works_with_two_way_merge_during_rebase(self):
         result = module.find_migration_names(
-            [
-                "<<<<<<<",
-                "0002_author_nicknames",
-                "=======",
-                "0002_longer_titles",
-                ">>>>>>>",
-            ]
+            dedent(
+                """\
+                <<<<<<<
+                0002_author_nicknames
+                =======
+                0002_longer_titles
+                >>>>>>>
+                """
+            )
         )
-        assert result == ("0002_author_nicknames", "0002_longer_titles")
+        assert result == (["0002_author_nicknames"], ["0002_longer_titles"])
+
+    def test_works_migration_chain_with_two_way_merge_during_rebase(self):
+        result = module.find_migration_names(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_second
+            0003_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+        assert result == (
+            ["0002_author_nicknames"],
+            ["0002_second", "0003_longer_titles"],
+        )
+
+    def test_works_migration_chain_with_two_way_merge_during_merge(self):
+        with mock.patch.object(module, "is_merge_in_progress", return_value=True):
+            result = module.find_migration_names(
+                dedent(
+                    """\
+                <<<<<<< HEAD
+                0002_author_nicknames
+                =======
+                0002_second
+                0003_longer_titles
+                >>>>>>> 123456789 (Increase Book title length)
+                """
+                )
+            )
+        assert result == (
+            ["0002_second", "0003_longer_titles"],
+            ["0002_author_nicknames"],
+        )
 
     def test_works_with_three_way_merge_during_rebase(self):
         result = module.find_migration_names(
-            [
-                "<<<<<<<",
-                "0002_author_nicknames",
-                "|||||||",
-                "0001_initial",
-                "=======",
-                "0002_longer_titles",
-                ">>>>>>>",
-            ]
+            dedent(
+                """\
+                <<<<<<<
+                0002_author_nicknames
+                |||||||
+                0001_initial
+                =======
+                0002_longer_titles
+                >>>>>>>
+                """
+            )
         )
-        assert result == ("0002_author_nicknames", "0002_longer_titles")
+        assert result == (["0002_author_nicknames"], ["0002_longer_titles"])
 
     def test_works_with_two_way_merge_during_merge(self):
         with mock.patch.object(module, "is_merge_in_progress", return_value=True):
             result = module.find_migration_names(
-                [
-                    "<<<<<<<",
-                    "0002_longer_titles",
-                    "=======",
-                    "0002_author_nicknames",
-                    ">>>>>>>",
-                ]
+                dedent(
+                    """\
+                    <<<<<<<
+                    0002_longer_titles
+                    =======
+                    0002_author_nicknames
+                    >>>>>>>
+                    """
+                )
             )
-        assert result == ("0002_author_nicknames", "0002_longer_titles")
+        assert result == (["0002_author_nicknames"], ["0002_longer_titles"])
 
     def test_works_with_three_way_merge_during_merge(self):
         with mock.patch.object(module, "is_merge_in_progress", return_value=True):
             result = module.find_migration_names(
-                [
-                    "<<<<<<<",
-                    "0002_longer_titles",
-                    "|||||||",
-                    "0001_initial",
-                    "=======",
-                    "0002_author_nicknames",
-                    ">>>>>>>",
-                ]
+                dedent(
+                    """\
+                    <<<<<<<
+                    0002_longer_titles
+                    |||||||
+                    0001_initial
+                    =======
+                    0002_author_nicknames
+                    >>>>>>>
+                    """
+                )
             )
-        assert result == ("0002_author_nicknames", "0002_longer_titles")
+        assert result == (["0002_author_nicknames"], ["0002_longer_titles"])
 
 
 class IsMergeInProgressTests(SimpleTestCase):
