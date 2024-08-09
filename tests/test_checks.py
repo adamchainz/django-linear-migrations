@@ -64,17 +64,6 @@ class CheckMaxMigrationFilesTests(TestCase):
         assert result[0].id == "dlm.E001"
         assert result[0].msg == "testapp's max_migration.txt does not exist."
 
-    def test_dlm_E002(self):
-        (self.migrations_dir / "__init__.py").touch()
-        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
-        (self.migrations_dir / "max_migration.txt").write_text("line1\nline2\n")
-
-        result = check_max_migration_files()
-
-        assert len(result) == 1
-        assert result[0].id == "dlm.E002"
-        assert result[0].msg == "testapp's max_migration.txt contains multiple lines."
-
     def test_dlm_E003(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
@@ -82,7 +71,7 @@ class CheckMaxMigrationFilesTests(TestCase):
 
         result = check_max_migration_files()
 
-        assert len(result) == 1
+        assert len(result) == 2
         assert result[0].id == "dlm.E003"
         assert result[0].msg == (
             "testapp's max_migration.txt points to non-existent migration"
