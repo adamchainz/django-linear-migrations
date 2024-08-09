@@ -77,11 +77,16 @@ class Command(BaseCommand):
             )
 
         if migration_applied(app_label, rebased_migration_name):
-            raise CommandError(
-                f"Detected {rebased_migration_name} as the rebased migration,"
-                + " but it is applied to the local database. Undo the rebase,"
-                + " reverse the migration, and try again."
-            )
+            try:
+                unapply_migrations(
+                    app_label, rebased_migration_name, merged_migration_name
+                )
+            except (FileNotFoundError, subprocess.SubprocessError):
+                raise CommandError(
+                    f"Detected {rebased_migration_name} as the rebased migration,"
+                    + " but it is applied to the local database. Undo the rebase,"
+                    + " reverse the migration, and try again."
+                )
 
         content = rebased_migration_path.read_text()
         split_result = re.split(
@@ -223,3 +228,55 @@ def migration_applied(app_label: str, migration_name: str) -> bool:
             # django_migrations table does not exist -> no migrations applied
             pass
     return False
+
+
+def unapply_migrations(
+    app_label: str, first_rebase_migration: str, last_merged_migration: str
+) -> None:  # pragma: no cover
+    first_rebase_migration_number, _rebased_rest = first_rebase_migration.split("_", 1)
+    last_merged_number, _merged_rest = last_merged_migration.split("_", 1)
+    migration_details = MigrationDetails(app_label)
+
+    subprocess.run(
+        [
+            "./manage.py",
+            "makemigrations",
+            "--merge",
+            "--noinput",
+            "--skip-checks",
+            f"{app_label}",
+        ],
+        check=True,
+    )
+
+    last_migration_to_be_applied = None
+    merge_migration_name = None
+
+    for migration_name in migration_details.names:
+        if migration_name.startswith(
+            f"{int(first_rebase_migration_number) - 1}".zfill(4)
+        ):
+            last_migration_to_be_applied = migration_name
+
+        elif migration_name.startswith(f"{int(last_merged_number) + 1}".zfill(4)):
+            merge_migration_name = migration_name
+
+    assert last_migration_to_be_applied is not None and merge_migration_name is not None
+    merge_migration_path = migration_details.dir / f"{merge_migration_name}.py"
+
+    subprocess.run(
+        [
+            "./manage.py",
+            "migrate",
+            "--skip-checks",
+            f"{app_label}",
+            last_migration_to_be_applied,
+            "--fake",
+        ],
+        check=True,
+    )
+
+    subprocess.run(
+        ["rm", f"{merge_migration_path}"],
+        check=True,
+    )
