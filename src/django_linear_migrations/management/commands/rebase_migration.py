@@ -46,27 +46,43 @@ class Command(BaseCommand):
         if not max_migration_txt.exists():
             raise CommandError(f"{app_label} does not have a max_migration.txt.")
 
-        migration_names = find_migration_names(
-            max_migration_txt.read_text().splitlines()
-        )
+        migration_names = find_migration_names(max_migration_txt.read_text())
         if migration_names is None:
             raise CommandError(
                 f"{app_label}'s max_migration.txt does not seem to contain a"
                 + " merge conflict."
             )
-        merged_migration_name, rebased_migration_name = migration_names
-        if merged_migration_name not in migration_details.names:
-            raise CommandError(
-                f"Parsed {merged_migration_name!r} as the already-merged"
-                + f" migration name from {app_label}'s max_migration.txt, but"
-                + " this migration does not exist."
-            )
-        if rebased_migration_name not in migration_details.names:
-            raise CommandError(
-                f"Parsed {rebased_migration_name!r} as the rebased migration"
-                + f" name from {app_label}'s max_migration.txt, but this"
-                + " migration does not exist."
-            )
+
+        merged_migration_names, rebased_migration_names = migration_names
+
+        for merged_migration_name in merged_migration_names:
+            if merged_migration_name not in migration_details.names:
+                raise CommandError(
+                    f"Parsed {merged_migration_name!r} as the already-merged"
+                    + f" migration name from {app_label}'s max_migration.txt, but"
+                    + " this migration does not exist."
+                )
+
+        for rebased_migration_name in rebased_migration_names:
+            if rebased_migration_name not in migration_details.names:
+                raise CommandError(
+                    f"Parsed {rebased_migration_name!r} as the rebased migration"
+                    + f" name from {app_label}'s max_migration.txt, but this"
+                    + " migration does not exist."
+                )
+
+        self.last_migration_name = merged_migration_names[-1]
+
+        first_migration = True
+        for rebased_migration_name in rebased_migration_names:
+            self.rebase_migration(app_label, rebased_migration_name, first_migration)
+            first_migration = False
+
+    def rebase_migration(
+        self, app_label: str, rebased_migration_name: str, first_migration: bool
+    ) -> None:
+        migration_details = MigrationDetails(app_label)
+        max_migration_txt = migration_details.dir / "max_migration.txt"
 
         rebased_migration_filename = f"{rebased_migration_name}.py"
         rebased_migration_path = migration_details.dir / rebased_migration_filename
@@ -136,7 +152,7 @@ class Command(BaseCommand):
                     ast.Tuple(
                         elts=[
                             ast.Constant(app_label),
-                            ast.Constant(merged_migration_name),
+                            ast.Constant(self.last_migration_name),
                         ]
                     )
                 )
@@ -152,16 +168,23 @@ class Command(BaseCommand):
 
         new_content = before_deps + ast_unparse(new_dependencies) + after_deps
 
-        merged_number, _merged_rest = merged_migration_name.split("_", 1)
+        last_merged_number, _merged_rest = self.last_migration_name.split("_", 1)
         _rebased_number, rebased_rest = rebased_migration_name.split("_", 1)
-        new_number = int(merged_number) + 1
+        new_number = int(last_merged_number) + 1
         new_name = str(new_number).zfill(4) + "_" + rebased_rest
         new_path_parts = rebased_migration_path.parts[:-1] + (f"{new_name}.py",)
         new_path = Path(*new_path_parts)
 
         rebased_migration_path.rename(new_path)
         new_path.write_text(new_content)
-        max_migration_txt.write_text(f"{new_name}\n")
+
+        if first_migration:
+            max_migration_txt.write_text(f"{new_name}\n")
+        else:
+            current_version_migrations = max_migration_txt.read_text()
+            max_migration_txt.write_text(current_version_migrations + f"{new_name}\n")
+
+        self.last_migration_name = new_name
 
         black_path = shutil.which("black")
         if black_path:  # pragma: no cover
@@ -176,19 +199,45 @@ class Command(BaseCommand):
         )
 
 
-def find_migration_names(max_migration_lines: list[str]) -> tuple[str, str] | None:
-    lines = max_migration_lines
-    if len(lines) <= 1:
+def find_migration_names(
+    current_version_migrations: str,
+) -> tuple[list[str], list[str]] | None:
+    migrations_lines = current_version_migrations.strip().splitlines()
+
+    if len(migrations_lines) <= 1:
         return None
-    if not lines[0].startswith("<<<<<<<"):
+    if not migrations_lines[0].startswith("<<<<<<<"):
         return None
-    if not lines[-1].startswith(">>>>>>>"):
+    if not migrations_lines[-1].startswith(">>>>>>>"):
         return None
-    migration_names = (lines[1].strip(), lines[-2].strip())
+
+    merged_migration_names = []
+    rebased_migration_names = []
+
+    index = 0
+    while index < len(migrations_lines):
+        if migrations_lines[index].startswith("<<<<<<<"):
+            index += 1
+            while not migrations_lines[index].startswith("======="):
+                if migrations_lines[index] == "|||||||":
+                    while not migrations_lines[index].startswith("======="):
+                        index += 1
+                else:
+                    merged_migration_names.append(migrations_lines[index])
+                    index += 1
+
+            index += 1
+
+        else:
+            while not migrations_lines[index].startswith(">>>>>>>"):
+                rebased_migration_names.append(migrations_lines[index])
+                index += 1
+            break
+
     if is_merge_in_progress():
         # During the merge 'ours' and 'theirs' are swapped in comparison with rebase
-        migration_names = (migration_names[1], migration_names[0])
-    return migration_names
+        return (rebased_migration_names, merged_migration_names)
+    return (merged_migration_names, rebased_migration_names)
 
 
 def is_merge_in_progress() -> bool:

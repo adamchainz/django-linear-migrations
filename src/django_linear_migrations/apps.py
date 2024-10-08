@@ -188,41 +188,28 @@ def check_max_migration_files(
             )
             continue
 
-        max_migration_txt_lines = max_migration_txt.read_text().strip().splitlines()
-        if len(max_migration_txt_lines) > 1:
-            errors.append(
-                Error(
-                    id="dlm.E002",
-                    msg=f"{app_label}'s max_migration.txt contains multiple lines.",
-                    hint=(
-                        "This may be the result of a git merge. Fix the file"
-                        + " to contain only the name of the latest migration,"
-                        + " or maybe use the 'rebase-migration' command."
-                    ),
+        migration_txt_lines = max_migration_txt.read_text().strip().splitlines()
+        for migration_name in migration_txt_lines:
+            if migration_name not in migration_details.names:
+                errors.append(
+                    Error(
+                        id="dlm.E003",
+                        msg=(
+                            f"{app_label}'s max_migration.txt points to"
+                            + f" non-existent migration {migration_name!r}."
+                        ),
+                        hint=(
+                            "Edit the max_migration.txt to contain the latest"
+                            + " migration's name."
+                        ),
+                    )
                 )
-            )
-            continue
-
-        max_migration_name = max_migration_txt_lines[0]
-        if max_migration_name not in migration_details.names:
-            errors.append(
-                Error(
-                    id="dlm.E003",
-                    msg=(
-                        f"{app_label}'s max_migration.txt points to"
-                        + f" non-existent migration {max_migration_name!r}."
-                    ),
-                    hint=(
-                        "Edit the max_migration.txt to contain the latest"
-                        + " migration's name."
-                    ),
-                )
-            )
             continue
 
         real_max_migration_name = [
             name for gp_app_label, name in graph_plan if gp_app_label == app_label
         ][-1]
+        max_migration_name = migration_txt_lines[-1]
         if max_migration_name != real_max_migration_name:
             errors.append(
                 Error(

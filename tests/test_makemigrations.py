@@ -40,7 +40,7 @@ class MakeMigrationsTests(TestCase):
         assert not max_migration_txt.exists()
 
     def test_creates_max_migration_txt(self):
-        out, err, returncode = self.call_command("testapp")
+        out, err, returncode = self.call_command("testapp", "--new")
 
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
@@ -48,7 +48,7 @@ class MakeMigrationsTests(TestCase):
 
     @unittest.skipUnless(django.VERSION >= (4, 2), "--update added in Django 4.2")
     def test_update(self):
-        self.call_command("testapp")
+        self.call_command("testapp", "--new")
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         assert max_migration_txt.read_text() == "0001_initial\n"
 
@@ -59,10 +59,12 @@ class MakeMigrationsTests(TestCase):
         out, err, returncode = self.call_command("--update", "testapp")
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
-        assert max_migration_txt.read_text() == "0001_initial_updated\n"
+        assert max_migration_txt.read_text() == "0001_initial\n0001_initial_updated\n"
 
     def test_creates_max_migration_txt_given_name(self):
-        out, err, returncode = self.call_command("testapp", "--name", "brand_new")
+        out, err, returncode = self.call_command(
+            "testapp", "--name", "brand_new", "--new"
+        )
 
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
@@ -89,7 +91,36 @@ class MakeMigrationsTests(TestCase):
 
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
-        assert max_migration_txt.read_text() == "0002_create_book\n"
+        assert max_migration_txt.read_text() == "0001_initial\n0002_create_book\n"
+
+    def test_create_max_migration_txt_with_multiple_migrations(self):
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        (self.migrations_dir / "__init__.py").touch()
+
+        out, err, returncode = self.call_command("testapp", "--name", "first", "--new")
+
+        assert returncode == 0
+        assert max_migration_txt.read_text() == "0001_first\n"
+
+        # Creating a second migration on without the `new` flag keeps
+        # the first migration, while updates the last migration in the
+        # "max_migration.txt"
+        out, err, returncode = self.call_command(
+            "testapp", "--empty", "--name", "second"
+        )
+
+        assert returncode == 0
+        assert max_migration_txt.read_text() == "0001_first\n0002_second\n"
+
+        # Creating a third migration on without the `new` flag keeps
+        # the first migration, while updates the last migration in the
+        # "max_migration.txt"
+        out, err, returncode = self.call_command(
+            "testapp", "--empty", "--name", "third"
+        )
+
+        assert returncode == 0
+        assert max_migration_txt.read_text() == "0001_first\n0002_second\n0003_third\n"
 
     @override_settings(FIRST_PARTY_APPS=[])
     def test_skips_creating_max_migration_txt_for_non_first_party_app(self):
