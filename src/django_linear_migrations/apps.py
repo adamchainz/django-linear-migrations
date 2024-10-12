@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import pkgutil
+from collections.abc import Generator
+from collections.abc import Iterable
 from functools import lru_cache
 from importlib import import_module
 from importlib import reload
 from pathlib import Path
 from types import ModuleType
-from typing import Generator
-from typing import Iterable
 
 from django.apps import AppConfig
 from django.apps import apps
