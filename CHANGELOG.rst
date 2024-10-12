@@ -2,6 +2,9 @@
 Changelog
 =========
 
+2.14.0 (2024-10-12)
+-------------------
+
 * Make ``squashmigrations`` update ``max_migration.txt`` files as well.
 
   Thanks to Gordon Wrigley for the report in `Issue #329 <https://github.com/adamchainz/django-linear-migrations/issues/329>`__.
