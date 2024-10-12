@@ -21,7 +21,7 @@ if sys.version_info < (3, 11):
         try:
             enter = cls.__enter__
             exit = cls.__exit__
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             raise TypeError(
                 f"'{cls.__module__}.{cls.__qualname__}' object does "
                 f"not support the context manager protocol"
