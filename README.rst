@@ -54,20 +54,6 @@ Installation
         ...,
     ]
 
-The app relies on overriding the built-in ``makemigrations`` command.
-*If your project has a custom* ``makemigrations`` *command,* ensure the app containing your custom command is **above** ``django_linear_migrations``, and that your command subclasses its ``Command`` class:
-
-.. code-block:: python
-
-    # myapp/management/commands/makemigrations.py
-    from django_linear_migrations.management.commands.makemigrations import (
-        Command as BaseCommand,
-    )
-
-
-    class Command(BaseCommand):
-        ...
-
 **Third,** check the automatic detection of first-party apps.
 Run this command:
 
@@ -86,7 +72,7 @@ If you see any apps listed that *aren’t* part of your project, define the list
 
     INSTALLED_APPS = FIRST_PARTY_APPS + ["django_linear_migrations", ...]
 
-(Note: Django recommends you always list first-party apps first in your project so they can override things in third-party and contrib apps.)
+Note: Django recommends you always list first-party apps first in your project so they can override things in third-party and contrib apps.
 
 **Fourth,** create the ``max_migration.txt`` files for your first-party apps by re-running the command without the dry run flag:
 
@@ -94,22 +80,33 @@ If you see any apps listed that *aren’t* part of your project, define the list
 
     python manage.py create_max_migration_files
 
-In the future, when you add a new app to your project, you’ll need to create its ``max_migration.txt`` file.
-Add the new app to ``INSTALLED_APPS`` or ``FIRST_PARTY_APPS`` as appropriate, then rerun the creation command for the new app by specifying its label:
-
-.. code-block:: sh
-
-    python manage.py create_max_migration_files my_new_app
-
 Usage
 =====
 
 django-linear-migrations helps you work on Django projects where several branches adding migrations may be in progress at any time.
 It enforces that your apps have a *linear* migration history, avoiding merge migrations and the problems they can cause from migrations running in different orders.
-It does this by making ``makemigrations`` record the name of the latest migration in per-app ``max_migration.txt`` files.
+It does this by making ``makemigrations`` and ``squashmigrations`` record the name of the latest migration in per-app ``max_migration.txt`` files.
 These files will then cause a merge conflicts in your source control tool (Git, Mercurial, etc.) in the case of migrations being developed in parallel.
 The first merged migration for an app will prevent the second from being merged, without addressing the conflict.
 The included ``rebase_migration`` command can help automatically such conflicts.
+
+Custom commands
+---------------
+
+django-linear-migrations relies on overriding the built-in ``makemigrations`` and ``squashmigrations`` commands.
+If your project has custom versions of these commands, ensure the app containing your custom commands is **above** ``django_linear_migrations``, and that your commands subclass its ``Command`` class.
+For example, for ``makemigrations``:
+
+.. code-block:: python
+
+    # myapp/management/commands/makemigrations.py
+    from django_linear_migrations.management.commands.makemigrations import (
+        Command as BaseCommand,
+    )
+
+
+    class Command(BaseCommand):
+        ...
 
 System Checks
 -------------
@@ -137,6 +134,16 @@ Pass the ``--dry-run`` flag to only list the ``max_migration.txt`` files that wo
 
 Pass the ``--recreate`` flag to re-create files that already exist.
 This may be useful after altering migrations with merges or manually.
+
+Adding new apps
+^^^^^^^^^^^^^^^
+
+When you add a new app to your project, you may need to create its ``max_migration.txt`` file to match any pre-created migrations.
+Add the new app to ``INSTALLED_APPS`` or ``FIRST_PARTY_APPS`` as appropriate, then rerun the creation command for the new app by specifying its label:
+
+.. code-block:: sh
+
+    python manage.py create_max_migration_files my_new_app
 
 ``rebase_migration`` Command
 ----------------------------

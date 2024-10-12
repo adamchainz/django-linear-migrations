@@ -50,6 +50,5 @@ def _post_write_migration_files(
 
         # Reload required as we've generated changes
         migration_details = MigrationDetails(app_label, do_reload=True)
-        max_migration_name = app_migrations[-1].name
         max_migration_txt = migration_details.dir / "max_migration.txt"
-        max_migration_txt.write_text(max_migration_name + "\n")
+        max_migration_txt.write_text(f"{app_migrations[-1].name}\n")

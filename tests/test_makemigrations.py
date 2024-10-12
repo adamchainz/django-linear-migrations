@@ -1,34 +1,22 @@
 from __future__ import annotations
 
-import sys
-import time
 import unittest
 from functools import partial
 from textwrap import dedent
 
 import django
-import pytest
 from django.db import models
 from django.test import TestCase
 from django.test import override_settings
 
+from tests.compat import EnterContextMixin
 from tests.utils import run_command
+from tests.utils import temp_migrations_module
 
 
-class MakeMigrationsTests(TestCase):
-    @pytest.fixture(autouse=True)
-    def tmp_path_fixture(self, tmp_path):
-        migrations_module_name = "migrations" + str(time.time()).replace(".", "")
-        self.migrations_dir = tmp_path / migrations_module_name
-        self.migrations_dir.mkdir()
-        sys.path.insert(0, str(tmp_path))
-        try:
-            with override_settings(
-                MIGRATION_MODULES={"testapp": migrations_module_name}
-            ):
-                yield
-        finally:
-            sys.path.pop(0)
+class MakeMigrationsTests(EnterContextMixin, TestCase):
+    def setUp(self):
+        self.migrations_dir = self.enterContext(temp_migrations_module())
 
     call_command = partial(run_command, "makemigrations")
 
