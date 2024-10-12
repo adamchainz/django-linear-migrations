@@ -17,7 +17,6 @@ from django.db.migrations.recorder import MigrationRecorder
 
 from django_linear_migrations.apps import MigrationDetails
 from django_linear_migrations.apps import is_first_party_app_config
-from django_linear_migrations.compat import ast_unparse
 
 
 class Command(BaseCommand):
@@ -150,7 +149,7 @@ class Command(BaseCommand):
                 + f"{app_label}."
             )
 
-        new_content = before_deps + ast_unparse(new_dependencies) + after_deps
+        new_content = before_deps + ast.unparse(new_dependencies) + after_deps
 
         merged_number, _merged_rest = merged_migration_name.split("_", 1)
         _rebased_number, rebased_rest = rebased_migration_name.split("_", 1)
