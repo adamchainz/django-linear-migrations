@@ -86,3 +86,59 @@ class MakeMigrationsTests(EnterContextMixin, TestCase):
         assert returncode == 0
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         assert not max_migration_txt.exists()
+
+    def test_updates_for_a_merge(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations, models
+
+
+            class Migration(migrations.Migration):
+                initial = True
+                dependencies = []
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "0002_first_branch.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations, models
+
+
+            class Migration(migrations.Migration):
+                dependencies = [
+                    ('testapp', '0001_initial'),
+                ]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "0002_second_branch.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations, models
+
+
+            class Migration(migrations.Migration):
+                dependencies = [
+                    ('testapp', '0001_initial'),
+                ]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "max_migration.txt").write_text(
+            "0002_second_branch.py\n"
+        )
+
+        out, err, returncode = self.call_command("testapp", "--merge", "--no-input")
+
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert (
+            max_migration_txt.read_text()
+            == "0003_merge_0002_first_branch_0002_second_branch\n"
+        )

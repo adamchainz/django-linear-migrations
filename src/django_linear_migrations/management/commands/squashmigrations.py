@@ -2,38 +2,27 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.core.management.commands import squashmigrations
 from django.core.management.commands.squashmigrations import Command as BaseCommand
-from django.db.migrations import Migration
-from django.db.migrations.writer import MigrationWriter
 
 from django_linear_migrations.apps import MigrationDetails
 from django_linear_migrations.apps import first_party_app_configs
+from django_linear_migrations.management.commands import spy_on_migration_writers
 
 
 class Command(BaseCommand):
     def handle(self, **options: Any) -> None:
-        # Temporarily wrap the call to MigrationWriter.__init__ to capture its first
-        # argument, the generated migration instance.
-        captured_migration = None
-
-        def wrapper(migration: Migration, *args: Any, **kwargs: Any) -> MigrationWriter:
-            nonlocal captured_migration
-            captured_migration = migration
-            return MigrationWriter(migration, *args, **kwargs)
-
-        squashmigrations.MigrationWriter = wrapper  # type: ignore[attr-defined]
-
-        try:
+        with spy_on_migration_writers() as written_migrations:
             super().handle(**options)
-        finally:
-            squashmigrations.MigrationWriter = MigrationWriter  # type: ignore[attr-defined]
 
-        if captured_migration is not None and any(
-            captured_migration.app_label == app_config.label
-            for app_config in first_party_app_configs()
-        ):
+        first_party_app_labels = {
+            app_config.label for app_config in first_party_app_configs()
+        }
+
+        for app_label, migration_name in written_migrations.items():
+            if app_label not in first_party_app_labels:
+                continue
+
             # A squash migration was generated, update max_migration.txt.
-            migration_details = MigrationDetails(captured_migration.app_label)
+            migration_details = MigrationDetails(app_label)
             max_migration_txt = migration_details.dir / "max_migration.txt"
-            max_migration_txt.write_text(f"{captured_migration.name}\n")
+            max_migration_txt.write_text(f"{migration_name}\n")
