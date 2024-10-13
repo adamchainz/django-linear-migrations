@@ -2,6 +2,9 @@
 Changelog
 =========
 
+2.15.0 (2024-10-13)
+-------------------
+
 * Make ``makemigrations --merge`` update ``max_migration.txt`` files as well.
 
   Thanks to Gordon Wrigley for the report in `Issue #78 <https://github.com/adamchainz/django-linear-migrations/issues/78>`__.
