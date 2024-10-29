@@ -33,7 +33,7 @@ Requirements
 
 Python 3.9 to 3.13 supported.
 
-Django 3.2 to 5.1 supported.
+Django 4.2 to 5.1 supported.
 
 Installation
 ============
@@ -163,7 +163,7 @@ The command then:
 2. edits it to depend on the new migration from your main branch
 3. updates ``max_migration.txt``.
 
-If Black is installed, the command formats the updated migration file with it, like Django’s built-in migration commands do (from version 4.1+).
+If Black is installed, the command formats the updated migration file with it, like Django’s built-in migration commands do.
 See below for some examples and caveats.
 
 Note rebasing the migration might not always be the *correct* thing to do.

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import unittest
 from functools import partial
 from textwrap import dedent
 
-import django
 from django.db import models
 from django.test import TestCase
 from django.test import override_settings
@@ -34,7 +32,6 @@ class MakeMigrationsTests(EnterContextMixin, TestCase):
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         assert max_migration_txt.read_text() == "0001_initial\n"
 
-    @unittest.skipUnless(django.VERSION >= (4, 2), "--update added in Django 4.2")
     def test_update(self):
         self.call_command("testapp")
         max_migration_txt = self.migrations_dir / "max_migration.txt"
