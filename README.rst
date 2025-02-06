@@ -105,8 +105,7 @@ For example, for ``makemigrations``:
     )
 
 
-    class Command(BaseCommand):
-        ...
+    class Command(BaseCommand): ...
 
 System Checks
 -------------
