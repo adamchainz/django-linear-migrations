@@ -16,7 +16,7 @@ class MakeMigrationsTests(EnterContextMixin, TestCase):
     def setUp(self):
         self.migrations_dir = self.enterContext(temp_migrations_module())
 
-    call_command = partial(run_command, "makemigrations")
+    call_command = staticmethod(partial(run_command, "makemigrations"))
 
     def test_dry_run(self):
         out, err, returncode = self.call_command("--dry-run", "testapp")

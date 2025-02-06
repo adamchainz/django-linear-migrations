@@ -36,7 +36,7 @@ class RebaseMigrationsTests(TestCase):
         finally:
             sys.path.pop(0)
 
-    call_command = partial(run_command, "rebase_migration")
+    call_command = staticmethod(partial(run_command, "rebase_migration"))
 
     def test_error_for_non_first_party_app(self):
         with mock.patch.object(module, "is_first_party_app_config", return_value=False):

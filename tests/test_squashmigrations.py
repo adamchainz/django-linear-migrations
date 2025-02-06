@@ -17,7 +17,7 @@ class SquashMigrationsTests(EnterContextMixin, TestCase):
     def setUp(self):
         self.migrations_dir = self.enterContext(temp_migrations_module())
 
-    call_command = partial(run_command, "squashmigrations")
+    call_command = staticmethod(partial(run_command, "squashmigrations"))
 
     def test_fail_already_squashed_migration(self):
         (self.migrations_dir / "__init__.py").touch()
