@@ -6,7 +6,7 @@ requires = [
 
 [project]
 name = "django-linear-migrations"
-version = "2.16.0"
+version = "2.17.0"
 description = "Ensure your migrations are linear."
 readme = "README.rst"
 keywords = [
