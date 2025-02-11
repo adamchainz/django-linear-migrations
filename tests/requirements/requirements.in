@@ -1,6 +1,0 @@
-black
-coverage[toml]
-django
-pytest
-pytest-django
-pytest-randomly
