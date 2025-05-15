@@ -271,7 +271,7 @@ You can do this with:
     $ git rebase -i --keep-base main
 
 This will open Git’s `interactive mode <https://git-scm.com/docs/git-rebase#_interactive_mode>`__ file.
-Edit this so that every comit after the first will be squashed, by starting each line with “s”.
+Edit this so that every commit after the first will be squashed, by starting each line with “s”.
 Then close the file, and the rebase will execute.
 
 After this operation, you can rebase onto your latest ``main`` branch as per the previous example.

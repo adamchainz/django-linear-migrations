@@ -203,7 +203,7 @@ class RebaseMigrationsTests(TestCase):
             "Could not find dependencies = [...] in '0002_longer_titles.py'"
         )
 
-    def test_error_for_unparseable_dependencies(self):
+    def test_error_for_unparsable_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration)
