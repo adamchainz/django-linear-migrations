@@ -72,7 +72,7 @@ class SquashMigrationsTests(EnterContextMixin, TestCase):
 
 
             class Migration(migrations.Migration):
-                intial = True
+                initial = True
                 dependencies = []
                 operations = []
             """
@@ -111,7 +111,7 @@ class SquashMigrationsTests(EnterContextMixin, TestCase):
 
 
             class Migration(migrations.Migration):
-                intial = True
+                initial = True
                 dependencies = []
                 operations = []
             """
