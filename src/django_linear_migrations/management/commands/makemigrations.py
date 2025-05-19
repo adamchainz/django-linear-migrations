@@ -4,13 +4,11 @@ from typing import Any
 
 from django.core.management.commands.makemigrations import Command as BaseCommand
 
-from django_linear_migrations.apps import MigrationDetails
-from django_linear_migrations.apps import first_party_app_configs
+from django_linear_migrations.apps import MigrationDetails, first_party_app_configs
 from django_linear_migrations.management.commands import spy_on_migration_writers
 
 
 class Command(BaseCommand):
-
     def handle(self, *app_labels: Any, **options: Any) -> None:
         with spy_on_migration_writers() as written_migrations:
             super().handle(*app_labels, **options)

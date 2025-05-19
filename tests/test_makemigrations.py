@@ -4,12 +4,10 @@ from functools import partial
 from textwrap import dedent
 
 from django.db import models
-from django.test import TestCase
-from django.test import override_settings
+from django.test import TestCase, override_settings
 
 from tests.compat import EnterContextMixin
-from tests.utils import run_command
-from tests.utils import temp_migrations_module
+from tests.utils import run_command, temp_migrations_module
 
 
 class MakeMigrationsTests(EnterContextMixin, TestCase):

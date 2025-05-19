@@ -12,13 +12,10 @@ import pytest
 from django.core.management import CommandError
 from django.db import connection
 from django.db.migrations.recorder import MigrationRecorder
-from django.test import SimpleTestCase
-from django.test import TestCase
-from django.test import override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from django_linear_migrations.management.commands import rebase_migration as module
-from tests.utils import empty_migration
-from tests.utils import run_command
+from tests.utils import empty_migration, run_command
 
 
 class RebaseMigrationsTests(TestCase):
@@ -39,9 +36,11 @@ class RebaseMigrationsTests(TestCase):
     call_command = staticmethod(partial(run_command, "rebase_migration"))
 
     def test_error_for_non_first_party_app(self):
-        with mock.patch.object(module, "is_first_party_app_config", return_value=False):
-            with pytest.raises(CommandError) as excinfo:
-                self.call_command("testapp")
+        with (
+            mock.patch.object(module, "is_first_party_app_config", return_value=False),
+            pytest.raises(CommandError) as excinfo,
+        ):
+            self.call_command("testapp")
 
         assert excinfo.value.args[0] == "'testapp' is not a first-party app."
 

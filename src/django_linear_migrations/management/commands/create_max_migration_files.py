@@ -8,9 +8,11 @@ from django.apps import apps
 from django.core.management.commands.makemigrations import Command as BaseCommand
 from django.db.migrations.loader import MigrationLoader
 
-from django_linear_migrations.apps import MigrationDetails
-from django_linear_migrations.apps import first_party_app_configs
-from django_linear_migrations.apps import get_graph_plan
+from django_linear_migrations.apps import (
+    MigrationDetails,
+    first_party_app_configs,
+    get_graph_plan,
+)
 
 
 class Command(BaseCommand):
@@ -81,9 +83,7 @@ class Command(BaseCommand):
                     )
                 else:
                     self.stdout.write(
-                        "Would create max_migration.txt for {}.".format(
-                            app_config.label
-                        )
+                        f"Would create max_migration.txt for {app_config.label}."
                     )
                 any_created = True
 

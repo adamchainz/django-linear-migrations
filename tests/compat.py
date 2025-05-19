@@ -4,8 +4,7 @@ import sys
 import unittest
 from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any
-from typing import TypeVar
+from typing import Any, TypeVar
 
 # TestCase.enterContext() backport, source:
 # https://adamj.eu/tech/2022/11/14/unittest-context-methods-python-3-11-backports/
