@@ -5,8 +5,7 @@ import time
 from textwrap import dedent
 
 import pytest
-from django.test import TestCase
-from django.test import override_settings
+from django.test import TestCase, override_settings
 
 from django_linear_migrations.apps import check_max_migration_files
 from tests.utils import empty_migration

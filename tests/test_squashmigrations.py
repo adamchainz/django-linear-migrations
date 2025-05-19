@@ -5,12 +5,10 @@ from textwrap import dedent
 
 import pytest
 from django.core.management import CommandError
-from django.test import TestCase
-from django.test import override_settings
+from django.test import TestCase, override_settings
 
 from tests.compat import EnterContextMixin
-from tests.utils import run_command
-from tests.utils import temp_migrations_module
+from tests.utils import run_command, temp_migrations_module
 
 
 class SquashMigrationsTests(EnterContextMixin, TestCase):

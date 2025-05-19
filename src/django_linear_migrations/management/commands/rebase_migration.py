@@ -9,14 +9,11 @@ from pathlib import Path
 from typing import Any
 
 from django.apps import apps
-from django.core.management import BaseCommand
-from django.core.management import CommandError
-from django.db import DatabaseError
-from django.db import connections
+from django.core.management import BaseCommand, CommandError
+from django.db import DatabaseError, connections
 from django.db.migrations.recorder import MigrationRecorder
 
-from django_linear_migrations.apps import MigrationDetails
-from django_linear_migrations.apps import is_first_party_app_config
+from django_linear_migrations.apps import MigrationDetails, is_first_party_app_config
 
 
 class Command(BaseCommand):
