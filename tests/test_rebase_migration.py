@@ -169,6 +169,40 @@ class RebaseMigrationsTests(TestCase):
             + " migration, and try again."
         )
 
+    def test_error_for_unparsable_file(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_longer_titles.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = [(]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "max_migration.txt").write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+
+        with pytest.raises(CommandError) as excinfo:
+            self.call_command("testapp")
+
+        assert excinfo.value.args[0] == (
+            "Encountered a SyntaxError trying to parse '0002_longer_titles.py'."
+        )
+
     def test_error_for_missing_dependencies(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
@@ -202,7 +236,7 @@ class RebaseMigrationsTests(TestCase):
             "Could not find a dependencies = [...] assignment in '0002_longer_titles.py'."
         )
 
-    def test_error_for_unparsable_dependencies(self):
+    def test_error_for_no_migration_class(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
         (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration)
@@ -211,8 +245,8 @@ class RebaseMigrationsTests(TestCase):
                 """\
             from django.db import migrations
 
-            class Migration(migrations.Migration):
-                dependencies = [(]
+            class MisnamedMigration(migrations.Migration):
+                dependencies = []
                 operations = []
             """
             )
@@ -233,7 +267,84 @@ class RebaseMigrationsTests(TestCase):
             self.call_command("testapp")
 
         assert excinfo.value.args[0] == (
-            "Encountered a SyntaxError trying to parse '0002_longer_titles.py'."
+            "Could not find a Migration class in '0002_longer_titles.py'."
+        )
+
+    def test_error_for_multiple_migration_classes(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_longer_titles.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = []
+                operations = []
+
+            class Migration(migrations.Migration):
+                dependencies = []
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "max_migration.txt").write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+
+        with pytest.raises(CommandError) as excinfo:
+            self.call_command("testapp")
+
+        assert excinfo.value.args[0] == (
+            "Found multiple Migration classes in '0002_longer_titles.py'."
+        )
+
+    def test_error_for_multiple_dependencies(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_author_nicknames.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_longer_titles.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = [
+                    ("otherapp", "0001_initial"),
+                ]
+                dependencies = [
+                    ("otherapp", "0001_initial"),
+                ]
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "max_migration.txt").write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+
+        with pytest.raises(CommandError) as excinfo:
+            self.call_command("testapp")
+
+        assert excinfo.value.args[0] == (
+            "Found multiple dependencies = [...] assignments in '0002_longer_titles.py'."
         )
 
     def test_error_for_no_dependencies(self):
