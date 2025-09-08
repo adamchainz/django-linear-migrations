@@ -199,7 +199,7 @@ class RebaseMigrationsTests(TestCase):
             self.call_command("testapp")
 
         assert excinfo.value.args[0] == (
-            "Could not find dependencies = [...] in '0002_longer_titles.py'"
+            "Could not find a dependencies = [...] assignment in '0002_longer_titles.py'."
         )
 
     def test_error_for_unparsable_dependencies(self):
@@ -233,7 +233,7 @@ class RebaseMigrationsTests(TestCase):
             self.call_command("testapp")
 
         assert excinfo.value.args[0] == (
-            "Encountered a SyntaxError trying to parse 'dependencies = [(]'."
+            "Encountered a SyntaxError trying to parse '0002_longer_titles.py'."
         )
 
     def test_error_for_no_dependencies(self):
@@ -356,6 +356,62 @@ class RebaseMigrationsTests(TestCase):
         assert not (self.migrations_dir / "0002_longer_titles.py").exists()
         new_content = (self.migrations_dir / "0003_longer_titles.py").read_text()
         deps = '[("testapp", "0002_author_nicknames"), ("otherapp", "0001_initial")]'
+        assert new_content == dedent(
+            f"""\
+            from django.db import migrations
+
+
+            class Migration(migrations.Migration):
+                dependencies = {deps}
+                operations = []
+            """
+        )
+
+    def test_success_dependencies_tuple(self):
+        (self.migrations_dir / "__init__.py").touch()
+        (self.migrations_dir / "0001_initial.py").write_text(empty_migration)
+        (self.migrations_dir / "0002_longer_titles.py").write_text(
+            dedent(
+                """\
+            from django.db import migrations
+
+            class Migration(migrations.Migration):
+                dependencies = (
+                    ('testapp', '0001_initial'),
+                    ('otherapp', '0001_initial'),
+                )
+                operations = []
+            """
+            )
+        )
+        (self.migrations_dir / "0002_author_nicknames.py").touch()
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        max_migration_txt.write_text(
+            dedent(
+                """\
+            <<<<<<< HEAD
+            0002_author_nicknames
+            =======
+            0002_longer_titles
+            >>>>>>> 123456789 (Increase Book title length)
+            """
+            )
+        )
+
+        out, err, returncode = self.call_command("testapp")
+
+        assert out == (
+            "Renamed 0002_longer_titles.py to 0003_longer_titles.py,"
+            + " updated its dependencies, and updated max_migration.txt.\n"
+        )
+        assert err == ""
+        assert returncode == 0
+        max_migration_txt = self.migrations_dir / "max_migration.txt"
+        assert max_migration_txt.read_text() == "0003_longer_titles\n"
+
+        assert not (self.migrations_dir / "0002_longer_titles.py").exists()
+        new_content = (self.migrations_dir / "0003_longer_titles.py").read_text()
+        deps = '(("testapp", "0002_author_nicknames"), ("otherapp", "0001_initial"))'
         assert new_content == dedent(
             f"""\
             from django.db import migrations
