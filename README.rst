@@ -31,7 +31,7 @@ For a bit of background, see the `introductory blog post <https://adamj.eu/tech/
 Requirements
 ============
 
-Python 3.9 to 3.13 supported.
+Python 3.9 to 3.14 supported.
 
 Django 4.2 to 5.2 supported.
 
