@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import ast
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -80,32 +79,70 @@ class Command(BaseCommand):
             )
 
         content = rebased_migration_path.read_text()
-        split_result = re.split(
-            r"(?<=dependencies = )(\[.*?\])",
-            content,
-            maxsplit=1,
-            flags=re.DOTALL,
-        )
-        if len(split_result) != 3:
-            raise CommandError(
-                "Could not find dependencies = [...] in"
-                + f" {rebased_migration_filename!r}"
-            )
-        before_deps, deps, after_deps = split_result
 
         try:
-            dependencies_module = ast.parse(deps)
+            module_def = ast.parse(content)
         except SyntaxError:
             raise CommandError(
-                f"Encountered a SyntaxError trying to parse 'dependencies = {deps}'."
+                f"Encountered a SyntaxError trying to parse {rebased_migration_filename!r}."
             )
 
-        dependencies_node = dependencies_module.body[0]
-        assert isinstance(dependencies_node, ast.Expr)
-        dependencies = dependencies_node.value
-        assert isinstance(dependencies, ast.List)
+        # Find the migration class
+        class_defs = [
+            node
+            for node in module_def.body
+            if isinstance(node, ast.ClassDef) and node.name == "Migration"
+        ]
+        if not class_defs:
+            raise CommandError(
+                f"Could not find a Migration class in {rebased_migration_filename!r}."
+            )
+        if len(class_defs) > 1:
+            raise CommandError(
+                f"Found multiple Migration classes in {rebased_migration_filename!r}."
+            )
+        migration_class_def = class_defs[0]
 
-        new_dependencies = ast.List(elts=[])
+        dependencies_assignments = [
+            node
+            for node in migration_class_def.body
+            if isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and node.targets[0].id == "dependencies"
+            and isinstance(node.value, (ast.List, ast.Tuple))
+        ]
+        if not dependencies_assignments:
+            raise CommandError(
+                f"Could not find a dependencies = [...] assignment in {rebased_migration_filename!r}."
+            )
+        if len(dependencies_assignments) > 1:
+            raise CommandError(
+                f"Found multiple dependencies = [...] assignments in {rebased_migration_filename!r}."
+            )
+
+        dependencies = dependencies_assignments[0].value
+        assert isinstance(dependencies, (ast.List, ast.Tuple))
+
+        lines = content.splitlines(keepends=True)
+        before_deps_len = (
+            sum(len(line) for line in lines[: dependencies.lineno - 1])
+            + dependencies.col_offset
+        )
+        assert dependencies.end_lineno is not None
+        assert dependencies.end_col_offset is not None
+        after_deps_len = (
+            sum(len(line) for line in lines[: dependencies.end_lineno - 1])
+            + dependencies.end_col_offset
+        )
+
+        before_deps = content[:before_deps_len]
+        after_deps = content[after_deps_len:]
+
+        if isinstance(dependencies, ast.Tuple):
+            new_dependencies: ast.Tuple | ast.List = ast.Tuple(elts=[])
+        else:
+            new_dependencies = ast.List(elts=[])
         num_this_app_dependencies = 0
         for dependency in dependencies.elts:
             # Skip swappable_dependency calls, other dynamically defined

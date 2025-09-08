@@ -7,6 +7,10 @@ Unreleased
 
 * Support Python 3.14.
 
+* Support tuples for Migration.dependencies in ``rebase_migration``.
+
+  Thanks to Tom Grainger for the report in `Issue #368 <https://github.com/adamchainz/django-linear-migrations/issues/368>`__.
+
 2.17.0 (2025-02-06)
 -------------------
 
