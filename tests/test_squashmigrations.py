@@ -3,6 +3,7 @@ from __future__ import annotations
 from functools import partial
 from textwrap import dedent
 
+import django
 import pytest
 from django.core.management import CommandError
 from django.test import TestCase, override_settings
@@ -17,7 +18,7 @@ class SquashMigrationsTests(EnterContextMixin, TestCase):
 
     call_command = staticmethod(partial(run_command, "squashmigrations"))
 
-    def test_fail_already_squashed_migration(self):
+    def test_already_squashed_migration(self):
         (self.migrations_dir / "__init__.py").touch()
         (self.migrations_dir / "0001_already_squashed.py").write_text(
             dedent(
@@ -53,13 +54,18 @@ class SquashMigrationsTests(EnterContextMixin, TestCase):
         max_migration_txt = self.migrations_dir / "max_migration.txt"
         max_migration_txt.write_text("0002_new_branch\n")
 
-        with pytest.raises(CommandError) as excinfo:
-            self.call_command("testapp", "0002", "--no-input")
+        if django.VERSION < (6, 0):
+            with pytest.raises(CommandError) as excinfo:
+                self.call_command("testapp", "0002", "--no-input")
 
-        assert excinfo.value.args[0].startswith(
-            "You cannot squash squashed migrations!"
-        )
-        assert max_migration_txt.read_text() == "0002_new_branch\n"
+            assert excinfo.value.args[0].startswith(
+                "You cannot squash squashed migrations!"
+            )
+            assert max_migration_txt.read_text() == "0002_new_branch\n"
+        else:
+            out, err, returncode = self.call_command("testapp", "0002", "--no-input")
+            assert returncode == 0
+            assert max_migration_txt.read_text() == "0001_squashed_0002_new_branch\n"
 
     def test_success(self):
         (self.migrations_dir / "__init__.py").touch()
