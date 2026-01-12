@@ -21,7 +21,7 @@ def get_base_makemigrations_command() -> type[MakeMigrationsCommand]:
     """
     for app_config in apps.get_app_configs():
         if app_config.name == "django_linear_migrations":
-            break
+            continue
         try:
             module = import_module(
                 f"{app_config.name}.management.commands.makemigrations"
