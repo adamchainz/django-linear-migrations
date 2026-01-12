@@ -1,14 +1,39 @@
 from __future__ import annotations
 
-from typing import Any
+from importlib import import_module
+from typing import Any, cast
 
-from django.core.management.commands.makemigrations import Command as BaseCommand
+from django.apps import apps
+from django.core.management.commands.makemigrations import (
+    Command as MakeMigrationsCommand,
+)
 
 from django_linear_migrations.apps import MigrationDetails, first_party_app_configs
 from django_linear_migrations.management.commands import spy_on_migration_writers
 
 
-class Command(BaseCommand):
+def get_base_makemigrations_command() -> type[MakeMigrationsCommand]:
+    """
+    Find makemigrations command from apps loaded before django_linear_migrations.
+
+    Ensures compatibility with other packages that override makemigrations
+    by inheriting from their command instead of Django's base command directly.
+    """
+    for app_config in apps.get_app_configs():
+        if app_config.name == "django_linear_migrations":
+            break
+        try:
+            module = import_module(
+                f"{app_config.name}.management.commands.makemigrations"
+            )
+            return cast(type[MakeMigrationsCommand], module.Command)
+        except (ImportError, AttributeError):
+            continue
+
+    return MakeMigrationsCommand
+
+
+class Command(get_base_makemigrations_command()):  # type: ignore[misc]
     def handle(self, *app_labels: Any, **options: Any) -> None:
         with spy_on_migration_writers() as written_migrations:
             super().handle(*app_labels, **options)
