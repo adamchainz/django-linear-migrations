@@ -340,7 +340,7 @@ django60 = [{ name = "django", marker = "python_full_version >= '3.12'", specifi
 test = [
     { name = "black" },
     { name = "coverage", extras = ["toml"] },
-    { name = "pytest" },
+    { name = "pytest", specifier = ">=9" },
     { name = "pytest-django" },
     { name = "pytest-randomly" },
 ]
