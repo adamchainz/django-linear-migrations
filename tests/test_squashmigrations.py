@@ -8,11 +8,10 @@ import pytest
 from django.core.management import CommandError
 from django.test import TestCase, override_settings
 
-from tests.compat import EnterContextMixin
 from tests.utils import run_command, temp_migrations_module
 
 
-class SquashMigrationsTests(EnterContextMixin, TestCase):
+class SquashMigrationsTests(TestCase):
     def setUp(self):
         self.migrations_dir = self.enterContext(temp_migrations_module())
 
