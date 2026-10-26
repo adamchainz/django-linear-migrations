@@ -6,11 +6,10 @@ from textwrap import dedent
 from django.db import models
 from django.test import TestCase, override_settings
 
-from tests.compat import EnterContextMixin
 from tests.utils import run_command, temp_migrations_module
 
 
-class MakeMigrationsTests(EnterContextMixin, TestCase):
+class MakeMigrationsTests(TestCase):
     def setUp(self):
         self.migrations_dir = self.enterContext(temp_migrations_module())
 
